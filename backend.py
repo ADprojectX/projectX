@@ -1,4 +1,3 @@
-# import openai_secret_manager
 import requests
 import os
 from dotenv import load_dotenv
