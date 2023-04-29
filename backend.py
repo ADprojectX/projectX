@@ -1,64 +1,21 @@
-import requests
-import os
-from dotenv import load_dotenv
-import openai
 import script
+import openai_request as osr
+import text_processing as tp
+import text_to_audio as tta
+import text_to_image as tti
 
-dotenv_path = os.path.join(os.getcwd(), '.env')
-load_dotenv(dotenv_path)
-def request_script(text):    
-    openai.api_key = os.getenv('OPENAI_SECRET_KEY')
-    response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                            {"role": "system", "content": "You will act as a youtube expert who will generate a script perfectly for the topic given"},
-                            {"role": "user", "content": text},
-                            ],
-                    max_tokens=15,
-                )
-                
-    answer = response['choices'][0]['message']['content']
-
-    print(f"The script for given topic is \n \n '{answer}'.")
-    return answer
-
-def process_input(topic):
-    TEMPLATE = "Generate a script for youtube video on {}."
-    output = TEMPLATE.format(topic)
-    return output
-
-def script_processing(temp_script):
-    processed_script = temp_script.split("\n")
-    new_list = []
-    script_desc={}
-
-    for i in processed_script:
-        if i==" " or not i:
-            continue
-        new_list.append(i)
-    # print(new_list)
-    SCENE='scene#{}'
-    i=0
-    while i<len(new_list):
-        ts = SCENE.format(i//2)
-        script_desc[ts] = [new_list[i][11:-1]]
-        i+=1
-        script_desc[ts].append(new_list[i][20:-1])
-        i+=1
-    print(script_desc)
-    # i=0
-    # while i<new_list
-    # narration_dict = {}
-    # image_desc_dict = {}
-
-# dict {1 : [narrtor, imagedescr]}
 
 if __name__ == '__main__':
     # topic = input()
+    # voice_number = input()
     topic = 'Top 15 Psycological facts for men.'
-    processed_topic = process_input(topic)
-    script_processing(script.temp_script)
-    # script_response = request_script(processed_topic)
+    voice_number = 0
+    processed_topic = tp.process_input(topic)
+    scene_dic = tp.script_processing(script.temp_script)
+    for k,v in scene_dic.items():
+        # {key:[nar, img_desc, ]}
+        scene_dic[k].append(tta.convert_to_audio(v[0], voice_number))
+        # scene_dic[k].append(tta.convert_to_image(v[1]))
+    print(scene_dic)
+    # script_response = osr.request_script(processed_topic)
     
-    
-    # for ()
