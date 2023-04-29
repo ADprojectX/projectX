@@ -22,5 +22,4 @@ def script_processing(temp_script):
         i+=1
         script_desc[ts].append(new_list[i][20:-1])
         i+=1
-    print(script_desc)
     return script_desc
