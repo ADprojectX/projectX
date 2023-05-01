@@ -1,48 +1,79 @@
-import discord
-from discord.ext import commands
 import requests
-from dotenv import load_dotenv
-from PIL import Image
-import os
-import pyautogui as pg
+import json
 import time
+import re
+import argparse
+import sys
 
-dotenv_path = os.path.join(os.getcwd(), '.env')
-load_dotenv(dotenv_path)
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-discord_token = os.getenv("DISCORD_BOT_TOKEN")
-client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
+class Sender:
 
-directory = os.getcwd()
-print(directory)
+    def __init__(self, 
+                 params):
+        
+        self.params = params
+        self.sender_initializer()
 
-@client.event
-async def on_ready():
-    print("Bot connected")
-    await call_discord(prompt, text)
+    def sender_initializer(self):
 
-async def call_discord(prompt, text):
-    await client.wait_until_ready()  # wait until the bot is ready
-    # channel = client.get_channel(1102068352932909158)#(int(CHANNEL_ID))  # replace channel_id with the ID of the channel you want to send the message to
-    pg.sleep(3)
-    pg.write('/imagine')
-    pg.sleep(5)
-    pg.press('tab')
-    pg.write(text)
-    pg.sleep(3)
-    pg.press('enter')
-    # await channel.send(prompt)
-    # await channel.send(text)
+        with open(self.params, "r") as json_file:
+            params = json.load(json_file)
 
-# @client.command()
-# async def greet(ctx):
-#     text = "/imagine\ta man eating indian food."
-#     await ctx.send(text)
-#     # await call_discord(prompt,text)
+        self.channelid=params['channelid']
+        self.authorization=params['authorization']
+        self.application_id = params['application_id']
+        self.guild_id = params['guild_id']
+        self.session_id = params['session_id']
+        self.version = params['version']
+        self.id = params['id']
+        self.flags = params['flags']
+        
+        
+    def send(self, prompt):
+        header = {
+            'authorization': self.authorization
+        }
+        
+        prompt = prompt.replace('_', ' ')
+        prompt = " ".join(prompt.split())
+        prompt = re.sub(r'[^a-zA-Z0-9\s]+', '', prompt)
+        prompt = prompt.lower()
 
-prompt = '/imagine'
-text = "a man eating indian food."
-client.run(discord_token)
+        payload = {'type': 2, 
+        'application_id': self.application_id,
+        'guild_id': self.guild_id,
+        'channel_id': self.channelid,
+        'session_id': self.session_id,
+        'data': {
+            'version': self.version,
+            'id': self.id,
+            'name': 'imagine',
+            'type': 1,
+            'options': [{'type': 3, 'name': 'prompt', 'value': str(prompt) + ' ' + self.flags}],
+            'attachments': []}
+            }
+        
+        r = requests.post('https://discord.com/api/v9/interactions', json = payload , headers = header)
+        while r.status_code != 204:
+            print('trying')
+            r = requests.post('https://discord.com/api/v9/interactions', json = payload , headers = header)
 
-# def convert_to_image(request_folder, image_desc):
-#     return 0
+        print('prompt [{}] successfully sent!'.format(prompt))
+
+def parse_args(args):
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--params',        help='Path to discord authorization and channel parameters', required=True)
+    parser.add_argument('--prompt',           help='prompt to generate', required=True)
+        
+    return parser.parse_args(args)
+
+
+if __name__ == "__main__":
+
+    args = sys.argv[1:]
+    args = parse_args(args)
+    params = args.params
+    prompt = args.prompt
+
+    sender = Sender(params)
+    sender.send(prompt)
