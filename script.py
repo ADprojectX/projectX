@@ -1,11 +1,11 @@
 temp_script = '''Narrator: "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
 
 Image Description: [A brain with gears turning inside]
-
-Narrator: "Fact number 1: The Zeigarnik Effect."
-
-Image Description: [A woman struggling to remember an unfinished task]
 '''
+# Narrator: "Fact number 1: The Zeigarnik Effect."
+
+# Image Description: [A woman struggling to remember an unfinished task]
+# '''
 # Narrator: "The Zeigarnik Effect states that people are more likely to remember uncompleted tasks than completed ones. This is because our brains have a natural tendency to focus on unfinished work, keeping it in our thoughts until it's completed."
 
 # Image Description: [A to-do list with some tasks checked off]

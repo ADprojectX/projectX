@@ -8,6 +8,7 @@ from sender import Sender
 from receiver import Receiver
 import json
 
+
 if __name__ == '__main__':
     # topic = input()
     # voice_number = input()'
@@ -34,12 +35,11 @@ if __name__ == '__main__':
     #     # load the JSON data into a dictionary
     #     params = json.load(f)
     
-    sender = Sender()
-    receiver = Receiver(request_folder+"/images")
+    sender = Sender(rid)
+    # receiver = Receiver(request_folder+"/images", rid)
 
     
     for k,v in scene_dic.items(): #calling audio conversion and img coversion and storing into above dictionaries
         # narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], voice_number)
-        img_desc_dic[k] = tti.convert_to_image(sender, receiver, v[1])
-        pass
+        img_desc_dic[k] = tti.convert_to_image(request_folder,sender, v[1])
     
