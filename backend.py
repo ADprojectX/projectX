@@ -4,7 +4,9 @@ import text_processing as tp
 import text_to_audio as tta
 import text_to_image as tti
 import os
-import sender
+from sender import Sender
+from receiver import Receiver
+import json
 
 if __name__ == '__main__':
     # topic = input()
@@ -27,16 +29,17 @@ if __name__ == '__main__':
     scene_dic = tp.script_processing(script.temp_script) #dictionary generatin for narration and img desc
     narration_dic={}
     img_desc_dic={}
-    # args = sys.argv[1:]
-    # args = parse_args(args)
-    params = args.params
-    prompt = args.prompt
-    sender = Sender(params)
-    sender.send(prompt)
-    for k,v in scene_dic.items(): #calling audio conversion and img coversion and storing into above dictionaries
-        narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], voice_number)
-        
 
-        # img_desc_dic[k] = tti.convert_to_image(request_folder, v[1])
-    # print(scene_dic)
+    # with open('sender_params.json', 'r') as f:
+    #     # load the JSON data into a dictionary
+    #     params = json.load(f)
+    
+    sender = Sender()
+    receiver = Receiver(request_folder+"/images")
+
+    
+    for k,v in scene_dic.items(): #calling audio conversion and img coversion and storing into above dictionaries
+        # narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], voice_number)
+        img_desc_dic[k] = tti.convert_to_image(sender, receiver, v[1])
+        pass
     

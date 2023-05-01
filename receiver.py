@@ -10,23 +10,31 @@ import glob
 import argparse
 import sys
 
+
+# class Receiver:
+#     def __init__(self, params, local_path):
+#         self.params = params
+#         self.local_path = local_path
+#         self.sender_initializer()
+#         # self.df = pd.DataFrame(columns = ['prompt', 'url', 'filename', 'is_downloaded'])
+
+
+
+
+
+
 class Receiver:
 
-    def __init__(self, 
-                 params,
-                 local_path):
-        
-        self.params = params
+    def __init__(self, local_path):
+        # self.params = params
         self.local_path = local_path
-
         self.sender_initializer()
-
         self.df = pd.DataFrame(columns = ['prompt', 'url', 'filename', 'is_downloaded'])
 
     
     def sender_initializer(self):
 
-        with open(self.params, "r") as json_file:
+        with open('sender_params.json', "r") as json_file:
             params = json.load(json_file)
 
         self.channelid=params['channelid']

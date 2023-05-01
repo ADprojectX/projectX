@@ -7,15 +7,12 @@ import sys
 
 class Sender:
 
-    def __init__(self, 
-                 params):
-        
-        self.params = params
+    def __init__(self):
+        # self.params = params
         self.sender_initializer()
 
     def sender_initializer(self):
-
-        with open(self.params, "r") as json_file:
+        with open('sender_params.json', "r") as json_file:
             params = json.load(json_file)
 
         self.channelid=params['channelid']
@@ -58,14 +55,15 @@ class Sender:
             r = requests.post('https://discord.com/api/v9/interactions', json = payload , headers = header)
 
         print('prompt [{}] successfully sent!'.format(prompt))
+        return r
 
-def parse_args(args):
+# def parse_args(args):
     
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--params',        help='Path to discord authorization and channel parameters', required=True)
-    parser.add_argument('--prompt',           help='prompt to generate', required=True)
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--params',        help='Path to discord authorization and channel parameters', required=True)
+#     parser.add_argument('--prompt',           help='prompt to generate', required=True)
         
-    return parser.parse_args(args)
+#     return parser.parse_args(args)
 
 
 # if __name__ == "__main__":
