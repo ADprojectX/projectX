@@ -1,7 +1,7 @@
-temp_script = '''Narrator: "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+temp_script = """Narrator: "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
 
 Image Description: [A brain with gears turning inside]
-'''
+"""
 # Narrator: "Fact number 1: The Zeigarnik Effect."
 
 # Image Description: [A woman struggling to remember an unfinished task]
