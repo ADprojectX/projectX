@@ -15,6 +15,7 @@ image = ImageClip(
 # # Create a video clip with the image and audio
 
 video = image.set_audio(audio)
+
 width, height = video.size
 screensize = (width, height)
 txtClip = TextClip(

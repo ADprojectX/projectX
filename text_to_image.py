@@ -1,22 +1,41 @@
-# from dis_bot import pending
+import discord
+from discord.ext import commands
+import requests
+from dotenv import load_dotenv
+from PIL import Image
 import os
-import database as db
-import re
+import pyautogui as pg
+import time
 
+dotenv_path = os.path.join(os.getcwd(), '.env')
+load_dotenv(dotenv_path)
+CHANNEL_ID = os.getenv("CHANNEL_ID")
+discord_token = os.getenv("DISCORD_BOT_TOKEN")
+client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
-def pending(prompt, image_folder):
-    db.add_pending_tasks(prompt, image_folder)
+directory = os.getcwd()
+print(directory)
 
+@client.event
+async def on_ready():
+    print("Bot connected")
+    await call_discord(prompt, text)
 
-def convert_to_image(request_folder, sender, prompt):
-    image_folder = request_folder + "/image"
-    None if os.path.exists(image_folder) else os.makedirs(image_folder)
+async def call_discord(prompt, text):
+    await client.wait_until_ready()  # wait until the bot is ready
+    channel = client.get_channel(1102068352932909158)#(int(CHANNEL_ID))  # replace channel_id with the ID of the channel you want to send the message to
+    await channel.send(prompt)
+    await channel.send(text)
 
-    r = sender.send(prompt)
-    prompt = prompt.lower()
-    prompt = re.sub(r"[^a-zA-Z0-9\s]+", "", prompt).strip()
+# @client.command()
+# async def greet(ctx):
+#     text = "/imagine\ta man eating indian food."
+#     await ctx.send(text)
+#     # await call_discord(prompt,text)
 
-    pending(prompt, image_folder)
-    # message_id = r.json()['id']
-    # print(message_id)
-    pass
+prompt = '/imagine'
+text = "a man eating indian food."
+client.run(discord_token)
+
+# def convert_to_image(request_folder, image_desc):
+#     return 0
