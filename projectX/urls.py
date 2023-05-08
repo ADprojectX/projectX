@@ -17,19 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 import debug_toolbar
-# from rest_framework import routers
-from accounts.views import UserViewSet
-
-
-# router = routers.DefaultRouter()
-# router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('__debug__/', include(debug_toolbar.urls)),
-    # path('', include(router.urls)),
-    # path('api/signup/', signup, name='signup'),
     path('api/', include('accounts.urls')),
+    path('req/', include('videogenerator.urls')),
 ]
-
-

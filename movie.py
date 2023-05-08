@@ -72,4 +72,3 @@ final_video.write_videofile(
     audio=True,
     audio_codec="aac",
 )
-

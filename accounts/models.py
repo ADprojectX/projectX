@@ -1,33 +1,18 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractUser
 
-class UserManager(BaseUserManager):
-    def create_user(self, username, password=None, **extra_fields):
-        if not username:
-            raise ValueError('The Username must be set')
-        user = self.model(username=username, **extra_fields)
-        user.password = make_password(password)
-        user.save(using=self._db)
-        return user
-    
-    def create_superuser(self, username, password, **extra_fields):
-        ...
-    
-class User(AbstractBaseUser):
-    username = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=50, null=True)
-    surname = models.CharField(max_length=50, null=True)
-    email = models.CharField(max_length=50, null=True)
-    phone_number = models.CharField(max_length=20, null=True)
-    last_login = models.DateTimeField(auto_now=True)
+# Create your models here.
+class User(AbstractUser):
+    name = models.CharField(max_length=200, blank=True, null=True)
+    surname = models.CharField(max_length=200, blank=True, null=True)
+    email = models.EmailField(unique=True, blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
-    password = models.CharField(max_length=50)
+    last_login = models.DateTimeField(blank=True, null=True, auto_now=True)
 
-    USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
-    
-    objects = UserManager()
-    
     def __str__(self):
         return self.username
+
+class JwtCsrfTokens(models.Model):
+    jwt_token = models.CharField(max_length=5000)
+    csrf_token = models.CharField(max_length=5000)
