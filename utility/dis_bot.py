@@ -7,7 +7,7 @@ import os
 import re
 
 # from text_to_image import pending_tasks
-from utility import database as db
+import database as db
 
 
 # dotenv_path = os.path.join(os.getcwd(), ".env")
