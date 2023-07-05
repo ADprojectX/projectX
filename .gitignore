@@ -1,2 +1,13 @@
 
 .env
+sender_params.json
+__pycache__/
+bin/
+include/
+share/
+lib/
+*.pyc
+.DS_Store
+.vscode/settings.json
+projectX.db
+projectX.session.sql

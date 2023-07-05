@@ -1,4 +1,7 @@
-temp_script = '''Narrator: "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+import json
+
+
+temp_script = """Narrator: "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
 
 Image Description: [A brain with gears turning inside]
 
@@ -64,4 +67,37 @@ Image Description: [A person with conflicting thoughts]
 
 Narrator: "Cognitive Dissonance is the mental discomfort we experience when our actions, beliefs, or attitudes are inconsistent with each other. To resolve this discomfort, we often change our beliefs or attitudes to align with our actions."
 
-Image Description: [A person adjusting their beliefs to match their actions]'''
+Image Description: [A person adjusting their beliefs to match their actions]
+"""
+
+
+def script_processing(temp_script):
+    processed_script = temp_script.split("\n")
+    new_list = []
+    script_desc = {}
+
+    for i in processed_script:
+        if i == " " or not i:
+            continue
+        new_list.append(i)
+    # print(new_list)
+    SCENE = "scene#{}"
+    i = 0
+    while i < len(new_list):
+        ts = SCENE.format(i // 2)
+        script_desc[ts] = [new_list[i][11:-1]]
+        i += 1
+        script_desc[ts].append(new_list[i][20:-1])
+        i += 1
+    return script_desc
+
+
+script_desc = script_processing(temp_script)
+
+# create a JSON file and write the script_desc to it
+with open('script_desc.json', 'w') as f:
+    json.dump(script_desc, f)
+
+# create a JSON file and write the list to it
+# with open('my_list.json', 'w') as f:
+#     json.dump(script_processing(temp_script), f)
