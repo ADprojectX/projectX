@@ -1,0 +1,9 @@
+
+[mypy]
+click>=6.0
+twisted>=16.4.0
+mypy==0.812
+
+[scripts]
+click>=6.0
+twisted>=16.4.0
