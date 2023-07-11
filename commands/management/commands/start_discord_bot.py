@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 import subprocess
 import time
 import os
-import os
 from django.conf import settings
 
 dis_bot_path = os.path.join(settings.BASE_DIR, 'utility', 'dis_bot.py')

@@ -16,20 +16,19 @@ def process_request(request, user_id, request_id):
     None if os.path.exists(request_folder) else os.makedirs(request_folder)
 
     topic = request.data.get('topic')
-    voice = request.data.get('voice')
+    # voice = request.data.get('voice')
 
-    processed_topic = tp.process_input(topic)  # request str process(text)
+    # processed_topic = tp.process_input(topic)  # request str process(text)
     # script_response = osr.request_script(processed_topic) #openai request for script
     scene_dic = tp.script_processing(temp_script)  # dictionary generatin for narration and img desc
-    narration_dic = {}
-    img_desc_dic = {}
-
-    sender = Sender(request_id)
-
-    for k, v in scene_dic.items():
-        # calling audio conversion and img coversion and storing into above dictionaries
-        narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], voice)
-        img_desc_dic[k] = tti.convert_to_image(request_folder, sender, v[1])
-
     return scene_dic
+    # narration_dic = {}
+    # img_desc_dic = {}
+    
+    # sender = Sender(request_id)
+
+    # for k, v in scene_dic.items():
+        # calling audio conversion and img coversion and storing into above dictionaries
+        # narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], 0)# voice)
+        # img_desc_dic[k] = tti.convert_to_image(request_folder, sender, v[1])
     # return HttpResponse("Request processed successfully!")

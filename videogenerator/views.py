@@ -27,7 +27,7 @@ def create_request(request):
         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
         user_id = payload.get('id')
         user = User.objects.get(id=user_id)
-        print(user)
+        # print(user)
         if not user.is_authenticated:
             print('here')
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -37,10 +37,25 @@ def create_request(request):
         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
-    voice = request.data.get('voice')
-    req = Request.objects.create(user=user, topic=topic, voice=voice)
-    script = process_request(request, user_id, req.id)
-    return Response({'message': 'Request created successfully','script': script,'reqid':req.id})
+    # voice = request.data.get('voice')
+    req = Request.objects.create(user=user, topic=topic)#, voice=voice)
+    req.script = process_request(request, user_id, req.id)
+    req.save()
+    print(req.id, 'request')
+    return Response({'message': 'Request created successfully','script': req.script,'reqid':req.id})
+
+@api_view(['GET'])
+def get_script(request):
+    req_id = request.query_params.get('reqid')
+    print(req_id, 'fetch')
+    try:
+        req = Request.objects.get(id=req_id)
+        print(req.script)
+        # Process the request and generate the script
+        # Modify this function based on your requirements
+        return Response({'message': 'Script retrieved successfully', 'script': req.script})
+    except Request.DoesNotExist:
+        return Response({'message': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['GET'])

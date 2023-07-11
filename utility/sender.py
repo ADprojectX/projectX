@@ -4,7 +4,7 @@ import time
 import re
 import argparse
 import sys
-
+import os
 
 class Sender:
     def __init__(self, rid):
@@ -13,6 +13,7 @@ class Sender:
         self.rid = rid
 
     def sender_initializer(self):
+        print(os.getcwd())
         with open("sender_params.json", "r") as json_file:
             params = json.load(json_file)
 

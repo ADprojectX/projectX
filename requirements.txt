@@ -1,0 +1,19 @@
+django
+pymysql
+django-debug-toolbar
+djangorestframework
+django-cors-headers
+djangorestframework_simplejwt
+openai
+python-dotenv
+elevenlabs
+pydantic==1.10.11
+SpeechRecognition
+moviepy
+pydub
+m3
+discord
+
+# brew install imagemagick
+# /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+# brew install --cask docker
