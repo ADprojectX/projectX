@@ -11,3 +11,5 @@ lib/
 .vscode/settings.json
 projectX.db
 projectX.session.sql
+accounts/migrations/
+accounts/__pycache__/
