@@ -8,7 +8,7 @@ class Request(models.Model):
     topic = models.CharField(max_length=200)
     voice = models.IntegerField(null = True)
     created = models.DateTimeField(auto_now_add=True)
-    script = models.TextField(null=True)
+    script = models.JSONField(null=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.topic}'

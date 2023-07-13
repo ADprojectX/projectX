@@ -10,8 +10,7 @@ from accounts.models import User
 import os
 import sys
 import zipfile
-# print(os.getcwd())
-# from projectX.utility.backendProcess import process_request
+import json
 from utility.backendProcess import process_request
 from django.http import StreamingHttpResponse
 from django.http import HttpResponse
@@ -37,25 +36,52 @@ def create_request(request):
         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
-    # voice = request.data.get('voice')
-    req = Request.objects.create(user=user, topic=topic)#, voice=voice)
-    req.script = process_request(request, user_id, req.id)
+    req = Request.objects.create(user=user, topic=topic)
+
+    # Process the request and generate the script as a dictionary
+    script_dict = process_request(request, user_id, req.id)
+
+    # Convert the script dictionary to a JSON string
+    script_json = json.dumps(script_dict)
+
+    # Save the script as a JSON dictionary in the Request model
+    req.script = script_dict
     req.save()
-    print(req.id, 'request')
+
     return Response({'message': 'Request created successfully','script': req.script,'reqid':req.id})
 
 @api_view(['GET'])
 def get_script(request):
     req_id = request.query_params.get('reqid')
-    print(req_id, 'fetch')
+    # print(req_id, 'fetch')
     try:
         req = Request.objects.get(id=req_id)
-        print(req.script)
-        # Process the request and generate the script
-        # Modify this function based on your requirements
-        return Response({'message': 'Script retrieved successfully', 'script': req.script})
+        script_dict = req.script
+
+        # Return the script dictionary as a response
+        return Response({'message': 'Script retrieved successfully', 'script': script_dict})
     except Request.DoesNotExist:
         return Response({'message': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def save_script(request):
+    final_scene = request.query_params.get('finalScene', None)
+    print(final_scene)
+    if final_scene:
+        req_id = request.query_params.get('reqid')
+        try:
+            req = Request.objects.get(id=req_id)
+            # Deserialize the final_scene JSON string to a Python object
+            script_dict = json.loads(final_scene)
+            # Update the script in the Request model with the deserialized object
+            req.script = script_dict
+            req.save()
+            return Response({'success': True})
+        except Request.DoesNotExist:
+            return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        return Response({'error': 'finalScene parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['GET'])

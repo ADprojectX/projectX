@@ -2,7 +2,6 @@ from utility import openai_request as osr, text_processing as tp, text_to_audio 
 import os
 from utility.sender import Sender
 import json
-from django.http import HttpResponse
 from utility.script import temp_script
 
 OBJECT_STORE = '/Users/ad_demon/Documents/GitHub/projectX/OBJECT_STORE'

@@ -17,9 +17,9 @@ def script_processing(temp_script):
     SCENE = "scene#{}"
     i = 0
     while i < len(new_list):
-        ts = SCENE.format(i // 2)
+        ts = SCENE.format(i)#//2
         script_desc[ts] = [new_list[i][11:-1]]
         i += 1
-        script_desc[ts].append(new_list[i][20:-1])
-        i += 1
+        # script_desc[ts].append(new_list[i][20:-1])
+        # i += 1
     return script_desc
