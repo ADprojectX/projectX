@@ -16,6 +16,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 def signup_user(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
+        print(serializer)
         # Get the password from the serializer data
         password = serializer.validated_data.pop('password')
         # Hash the password
@@ -33,7 +34,7 @@ def login_user(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         user = authenticate(
-            username=serializer.validated_data['username'],
+            email=serializer.validated_data['email'],
             password=serializer.validated_data['password']
         )
         if user is not None:

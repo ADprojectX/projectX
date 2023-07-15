@@ -8,10 +8,11 @@ from rest_framework import status
 import jwt
 from accounts.models import User
 import os
-import sys
+import base64
 import zipfile
 import json
 from utility.backendProcess import process_request
+from utility.text_to_audio import get_voice_samples
 from django.http import StreamingHttpResponse
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
@@ -66,7 +67,6 @@ def get_script(request):
 @api_view(['GET'])
 def save_script(request):
     final_scene = request.query_params.get('finalScene', None)
-    print(final_scene)
     if final_scene:
         req_id = request.query_params.get('reqid')
         try:
@@ -112,3 +112,15 @@ def get_video_files(request):
     os.remove(temp_zip_path)
 
     return response
+
+@api_view(["GET"])
+def voice_samples(request):
+    voice_samples = get_voice_samples()  # Assuming you have the logic to populate the voice_samples dictionary
+
+    serialized_voice_samples = {}
+    for audio_name, audio_data in voice_samples.items():
+        base64_audio = base64.b64encode(audio_data).decode('utf-8')
+        serialized_voice_samples[audio_name] = base64_audio
+
+    return Response(serialized_voice_samples)
+    
