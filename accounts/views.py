@@ -68,7 +68,6 @@ def login_user(request):
 def user_dashboard(request):
     token = request.COOKIES.get('jwt')
     if not token or not JwtCsrfTokens.objects.filter(jwt_token=token).exists():
-        print('here')
         raise AuthenticationFailed('Unauthenticated!')
 
     try:
@@ -88,3 +87,23 @@ def logout_user(request):
     response.delete_cookie('jwt')
     response.data = {'message': 'Logged out successfully'}
     return response
+
+@api_view(['POST'])
+def check_active(request):
+    token = request.COOKIES.get('jwt')
+    if not token or not JwtCsrfTokens.objects.filter(jwt_token=token).exists():
+        print('useasdvuyvaiusr')
+        raise AuthenticationFailed('Unauthenticated!')
+
+    try:
+        payload = jwt.decode(token, 'secrett', algorithms=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationFailed('Unauthenticated!')
+
+    user_id = payload['id']
+    user = User.objects.filter(id=user_id).first()
+    if user:
+        email = user.email
+        return Response({'email': email}, status=status.HTTP_200_OK)
+    else:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

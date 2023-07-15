@@ -8,6 +8,7 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(blank=True, null=True, auto_now=True)
+    username = models.CharField(max_length=200, blank=True, null=True)
     USERNAME_FIELD = 'email'
     # Remove 'email' from REQUIRED_FIELDS
     REQUIRED_FIELDS = []
