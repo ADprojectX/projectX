@@ -14,6 +14,9 @@ from pathlib import Path
 import pymysql
 pymysql.version_info = (2,3,0,"final",0)
 pymysql.install_as_MySQLdb()
+from celery import Celery
+
+app = Celery('projectX')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,7 +49,8 @@ INSTALLED_APPS = [
     'corsheaders',
     "videogenerator.apps.VideogeneratorConfig",
     'rest_framework_simplejwt.token_blacklist',
-    "commands"
+    "commands",
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +144,12 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['videogenerator.routers.MongoDBRouter']
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

@@ -5,10 +5,11 @@ from utility.script import temp_script
 from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
 import time
+from videogenerator.serializers import RequestSerializer
 
 
 # The number of simultaneous requests allowed by the buffer
-IMAGE_BUFFER_SIZE = 3
+IMAGE_BUFFER_SIZE = 13
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
@@ -42,34 +43,23 @@ def path_to_request(request):
     return request_folder
 
 
-def process_image_with_semaphore(request_folder, sender, prompt, semaphore, request):
-    with semaphore:
-        return tti.convert_to_image(request_folder, sender, prompt, request)
+# def process_image_with_semaphore(request_folder, sender, prompt, semaphore, request):
+#     with semaphore:
+#         return tti.convert_to_image(request_folder, sender, prompt, request)
 
 def generate_video(request, script, path):
     sender = Sender(request.id)
+    # sender_json = sender.to_json()
+    # request_json = RequestSerializer(request).data
+
     # Process audios and images in parallel
     a = time.time()
-    with ThreadPoolExecutor(max_workers=IMAGE_BUFFER_SIZE) as executor:
-        # # Process audios
-        # narration_dic = {}
-        # for k, v in script.items():
-        #     narration_dic[k] = executor.submit(tta.convert_to_audio,  path, k, v[0], request.voice if request.voice else 'Romi')
-
-        # Process images with a Semaphore to limit concurrent requests
-        image_tasks = []
-        image_semaphore = ThreadPoolExecutor(max_workers=IMAGE_BUFFER_SIZE)
-        for k, v in script.items():
-            image_task = executor.submit(process_image_with_semaphore, path, sender, v[1], image_semaphore, request)
-            image_tasks.append(image_task)
-        print(image_tasks)
-        # # Wait for all audio and image tasks to complete
-        # wait(list(narration_dic.values()) + image_tasks)
-
-        # # Retrieve results from audio tasks
-        # for k, future in narration_dic.items():
-        #     narration_dic[k] = future.result()
-
+    # Process audios
+    narration_dic = {}
+    img_desc_dic = {}
+    for k, v in script.items():
+        narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
+        img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
     b = time.time()
     print(f'time:{b-a}')
 

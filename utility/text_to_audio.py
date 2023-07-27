@@ -27,11 +27,16 @@ def save_voice_samples():
     return voice_path
 
 
-def convert_to_audio(request_folder, k, narration, voice_number):
+def convert_to_audio(request_folder, k, narration, voice_name):
     audio_folder = request_folder + "/audio"
     None if os.path.exists(audio_folder) else os.makedirs(audio_folder)
 
-    audio = generate(text=narration, voice=voices[voice_number])
+    # Find the voice object based on the given voice_name
+    voice = next((v for v in voices if v.name == voice_name), None)
+    if voice is None:
+        raise ValueError(f"Voice with name '{voice_name}' not found.")
+
+    audio = generate(text=narration, voice=voice)
 
     formatted_voice = VOICE_KEY.format(k) 
     voice_path = audio_folder + f"/{formatted_voice}.mp3"
@@ -40,6 +45,7 @@ def convert_to_audio(request_folder, k, narration, voice_number):
         f.write(audio)
 
     return voice_path
+
 
 # get_voice_samples()
 # save_voice_samples()

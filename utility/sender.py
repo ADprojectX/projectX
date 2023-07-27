@@ -3,14 +3,29 @@ import json
 import re
 import os
 
+class SenderEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Sender):
+            # Return a dictionary representation of the Sender object
+            return {
+                "_sender": True,
+                "rid": obj.rid,
+                # Add other attributes of the Sender object that you want to serialize
+                # For example: "channelid": obj.channelid, "authorization": obj.authorization, etc.
+            }
+        return super().default(obj)
+
 class Sender:
     def __init__(self, rid):
         # self.params = params
         self.sender_initializer()
         self.rid = rid
 
+    def to_json(self):
+        # Serialize the Sender object to a JSON string using the custom encoder
+        return json.dumps(self, cls=SenderEncoder)
+
     def sender_initializer(self):
-        print(os.getcwd())
         with open("sender_params.json", "r") as json_file:
             params = json.load(json_file)
 
@@ -30,7 +45,6 @@ class Sender:
         prompt = " ".join(prompt.split())
         prompt = re.sub(r"[^a-zA-Z0-9\s]+", "", prompt).strip()
         # prompt = prompt.lower()
-        print(prompt, "sender.py")
 
         payload = {
             "type": 2,
