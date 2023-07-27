@@ -122,13 +122,24 @@ DATABASES = {
         'OPTIONS': {  
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"  
         }  
-    }  
+    },
+       'mongoDB': {
+        'ENGINE': 'djongo',
+        'ENFORCE_SCHEMA': False,
+        'NAME': 'projectX',
+        'CLIENT': {
+            'host': 'mongodb+srv://adayani28:gc1WAz1T1GA3ewKw@cluster0.s73gfq6.mongodb.net/?retryWrites=true&w=majority',
+            # 'ssl_cert_reqs': ssl.CERT_NONE,  # Bypass SSL certificate verification for development
+        },
+        'ATOMIC_REQUESTS': False,
+    }
     # "default": {
     #     "ENGINE": "django.db.backends.sqlite3",
     #     "NAME": BASE_DIR / "db.sqlite3",
     # }
 }
 
+DATABASE_ROUTERS = ['videogenerator.routers.MongoDBRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

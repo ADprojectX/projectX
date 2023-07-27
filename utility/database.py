@@ -15,29 +15,33 @@ connection = pymysql.connect(
 cursor = connection.cursor()
 
 
-def add_pending_tasks(prompt, image_folder):
-    cursor.execute(
-        """CREATE TABLE IF NOT EXISTS pending_tasks (prompt text, image_folder text)"""
-    )
-    cursor.execute(
-        "INSERT INTO pending_tasks (prompt, image_folder) VALUES (%s, %s)",
-        (prompt, image_folder),
-    )
-    connection.commit()
+# def add_pending_tasks(prompt, image_folder):
+#     cursor.execute(
+#         """CREATE TABLE IF NOT EXISTS pending_tasks (prompt text, image_folder text)"""
+#     )
+#     cursor.execute(
+#         "INSERT INTO pending_tasks (prompt, image_folder) VALUES (%s, %s)",
+#         (prompt, image_folder),
+#     )
+#     connection.commit()
 
 
 def remove_pending_tasks(prompt):
-    cursor.execute("SELECT * FROM pending_tasks WHERE prompt=%s", (prompt,))
+    cursor.execute("SELECT * FROM videogenerator_pendingtask WHERE prompt=%s", (prompt,))
     rows = cursor.fetchall()
     if rows:
         for row in rows:
-            prompt, image_folder = row
+            _, prompt, image_folder = row
         # Delete entry based on prompt
-        cursor.execute("DELETE FROM pending_tasks WHERE prompt=%s", (prompt,))
+        cursor.execute("DELETE FROM videogenerator_pendingtask WHERE prompt=%s", (prompt,))
         connection.commit()
+        print(image_folder, 'zeher')
         return image_folder
     else:
         return None
+
+# prompt = 'a brain with gears turning inside'
+# remove_pending_tasks(prompt)
 
 
 # data = cursor.fetchall()

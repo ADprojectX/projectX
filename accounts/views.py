@@ -92,7 +92,7 @@ def logout_user(request):
 def check_active(request):
     token = request.COOKIES.get('jwt')
     if not token or not JwtCsrfTokens.objects.filter(jwt_token=token).exists():
-        print('useasdvuyvaiusr')
+        # print('useasdvuyvaiusr')
         raise AuthenticationFailed('Unauthenticated!')
 
     try:

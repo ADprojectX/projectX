@@ -38,11 +38,12 @@ async def download_image(url, filename):
     if response.status_code == 200:
         prompt, ext = os.path.splitext(filename)
         prompt = re.sub(
-            r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt.lower()[7:]
+            r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt.lower()[12:]
         ).strip()
+        print(prompt)
         pending_prompt = prompt.replace("_", " ").strip()
         output_folder = db.remove_pending_tasks(pending_prompt)
-
+        print(output_folder)
         if output_folder == None:
             return
         input_folder = output_folder + "/input"

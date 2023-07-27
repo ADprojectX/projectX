@@ -3,12 +3,13 @@ import json
 
 temp_script = """Narrator: "Welcome to today's videos, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
 
+"""
+"""
 Narrator: "Fact number 1: The Zeigarnik Effect."
 
 Narrator: "The Zeigarnik Effect states that people are more likely to remember uncompleted tasks than completed ones. This is because our brains have a natural tendency to focus on unfinished work, keeping it in our thoughts until it's completed."
 
 Narrator: "Fact number 2: The Halo Effect."
-
 Narrator: "The Halo Effect is a cognitive bias that causes us to form an overall impression of someone based on a single positive trait. This can lead to inaccurate judgments and even impact our decisions."
 
 Narrator: "Fact number 3: The Power of Suggestion."
@@ -36,10 +37,12 @@ Narrator: "Fact number 8: Cognitive Dissonance."
 Narrator: "Cognitive Dissonance is the mental discomfort we experience when our actions, beliefs, or attitudes are inconsistent with each other. To resolve this discomfort, we often change our beliefs or attitudes to align with our actions."
 """
 
-img_desc = '''Image Description: [A brain with gears turning inside]
-Image Description: [A woman struggling to remember an unfinished task]
-Image Description: [A to-do list with some tasks checked off]
-Image Description: [A person with a halo above their head]
+img_desc = '''Image Description: A brain with gears turning inside
+'''
+'''
+Image Description: A woman struggling to remember an unfinished task
+Image Description: A to-do list with some tasks checked off
+Image Description: A person with a halo above their head
 Image Description: [A group of people, with one person standing out due to their positive trait]
 Image Description: [A person whispering into another person's ear]
 Image Description: [A group of people agreeing to an idea]

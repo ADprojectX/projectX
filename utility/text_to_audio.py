@@ -25,27 +25,6 @@ def save_voice_samples():
             f.write(audio)
 
     return voice_path
-    # voice_samples_directory = "voice_samples"  # Directory to store the voice samples
-    # os.makedirs(voice_samples_directory, exist_ok=True)
-
-    # # voice_list = voices()
-    # for i, voice in enumerate(voices):
-    #     voice_name = voice.get("name")
-    #     voice_url = voice.get("url")
-    #     print(f"Cloning voice: {voice_name}")
-
-    #     cloned_voice = clone(voice_url)
-    #     voice_id = cloned_voice.get("id")
-
-    #     if voice_id:
-    #         print(f"Generating voice samples for: {voice_name}")
-
-    #         # Generate the voice samples
-    #         generate(voice_id, output_directory=voice_samples_directory)
-
-    #         print(f"Voice samples generated for: {voice_name}")
-    #     else:
-    #         print(f"Failed to clone voice: {voice_name}")
 
 
 def convert_to_audio(request_folder, k, narration, voice_number):
@@ -62,7 +41,7 @@ def convert_to_audio(request_folder, k, narration, voice_number):
 
     return voice_path
 
-get_voice_samples()
+# get_voice_samples()
 # save_voice_samples()
 
 
