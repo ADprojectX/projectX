@@ -93,7 +93,7 @@ def save_script(request):
             script.save()  # Save the changes to the database
             
             request_path = path_to_request(req)
-            generate_video(req, script.script_data, request_path)
+            # generate_video(req, script.script_data, request_path)
 
             if not created:
                 return Response({'success': True})
@@ -148,6 +148,7 @@ def voice_samples(request):
         serialized_voice_samples[audio_name] = base64_audio
 
     return Response(serialized_voice_samples)
+
 
 
 # @api_view(["GET"])
