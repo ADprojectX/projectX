@@ -33,23 +33,22 @@ def split_image(image_file):
         return top_left, top_right, bottom_left, bottom_right
 
 
-async def download_image(url, filename):
+async def download_image(url, filename, prompt):
     response = requests.get(url)
     if response.status_code == 200:
-        prompt, ext = os.path.splitext(filename)
-        prompt = re.sub(
-            r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt.lower()[12:]
-        ).strip()
-        print(prompt)
-        pending_prompt = prompt.replace("_", " ").strip()
-        output_folder = db.remove_pending_tasks(pending_prompt)
-        print(output_folder)
+        _, ext = os.path.splitext(filename)
+        # prompt = re.sub(
+        #     r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt.lower()[12:]
+        # ).strip()
+
+        # pending_prompt = prompt.replace("_", " ").strip()
+        output_folder = db.remove_pending_tasks(prompt)
         if output_folder == None:
             return
         input_folder = output_folder + "/input"
         # Check if the input folder exists, and create it if necessary
         None if os.path.exists(input_folder) else os.makedirs(input_folder)
-        print(prompt, ext, 'demodummy')
+        # print(prompt, ext, 'demodummy')
         file_ext = f"{prompt}{ext}"
         with open(f"{input_folder}/{file_ext}", "wb") as f:
             f.write(response.content)
@@ -90,12 +89,19 @@ async def on_ready():
 @client.event
 async def on_message(message):
     for attachment in message.attachments:
+        # **a group of people with one person standing out due to their positive trait** - <@709717610530340895> (fast)
+        result = re.search(r"\*\*(.*?)\*\*", message.content)
+        if result:
+            prompt = result.group(1)[:-6]
+            print(prompt)
+        else:
+            print("No match found.")
         if "Upscaled by" in message.content:
             file_prefix = "UPSCALED_"
         else:
             file_prefix = ""
         if attachment.filename.lower().endswith((".png", ".jpg", ".jpeg", ".gif")):
-            await download_image(attachment.url, f"{file_prefix}{attachment.filename}")
+            await download_image(attachment.url, f"{file_prefix}{attachment.filename}", prompt)
 
 
 client.run(discord_token)

@@ -5,8 +5,24 @@ from dotenv import load_dotenv
 load_dotenv()
 set_api_key(os.getenv("XI_SECRET_KEY"))
 voices = voices()
-VOICE_KEY = "voice#{}"
+VOICE_KEY = "{}"#"voice#{}"
 voice_folder = "voice_samples"
+
+def save_new_voice_samples():
+    voice_list = {}
+    existing_files = os.listdir(voice_folder)
+
+    for voice in voices:
+        file_path = voice_folder + f"/{voice.name}.mp3"
+
+        # Check if the file already exists in the voice_samples folder
+        if voice.name + ".mp3" not in existing_files:
+            audio = generate(text = "Explore a world of diverse voices with our captivating voice samples.", voice = voice)
+            voice_path = voice_folder + f"/{voice.name}.mp3"
+            with open(voice_path, "wb") as f:
+                f.write(audio)
+
+    return voice_list
 
 def get_voice_samples():
     voice_list={}
@@ -24,12 +40,10 @@ def save_voice_samples():
         with open(voice_path, "wb") as f:
             f.write(audio)
 
-    return voice_path
 
-
-def convert_to_audio(request_folder, k, narration, voice_name):
-    audio_folder = request_folder + "/audio"
-    None if os.path.exists(audio_folder) else os.makedirs(audio_folder)
+def convert_to_audio(voice_file, narration, voice_name):
+    # audio_folder = request_folder + "/audio"
+    # None if os.path.exists(audio_folder) else os.makedirs(audio_folder)
 
     # Find the voice object based on the given voice_name
     voice = next((v for v in voices if v.name == voice_name), None)
@@ -38,15 +52,14 @@ def convert_to_audio(request_folder, k, narration, voice_name):
 
     audio = generate(text=narration, voice=voice)
 
-    formatted_voice = VOICE_KEY.format(k) 
-    voice_path = audio_folder + f"/{formatted_voice}.mp3"
+    # formatted_voice = VOICE_KEY.format(k) 
+    # voice_path = audio_folder + f"/{formatted_voice}.mp3"
 
-    with open(voice_path, "wb") as f:
+    with open(voice_file, "wb") as f:
         f.write(audio)
 
-    return voice_path
 
-
+# save_new_voice_samples()
 # get_voice_samples()
 # save_voice_samples()
 

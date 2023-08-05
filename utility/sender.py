@@ -5,20 +5,12 @@ import os
 
 class SenderEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Sender):
-            # Return a dictionary representation of the Sender object
-            return {
-                "_sender": True,
-                "rid": obj.rid,
-                # Add other attributes of the Sender object that you want to serialize
-                # For example: "channelid": obj.channelid, "authorization": obj.authorization, etc.
-            }
-        return super().default(obj)
+        return obj.__dict__
+
 
 class Sender:
     def __init__(self, rid):
         # self.params = params
-        self.sender_initializer()
         self.rid = rid
 
     def to_json(self):
@@ -38,7 +30,9 @@ class Sender:
         self.id = params["id"]
         self.flags = params["flags"]
 
+
     def send(self, prompt):
+        self.sender_initializer()
         header = {"authorization": self.authorization}
 
         prompt = prompt.replace("_", " ")
@@ -87,3 +81,11 @@ class Sender:
 # body b'{"type": 2, "application_id": "936929561302675456", "guild_id": "1102068352366690336", "channel_id": "1102068352932909158",
 # "session_id": "955fa3205f5306c1bd19317a9078040d", "data": {"version": "1077969938624553050", "id": "938956540159881230", "name": "imagine",
 #  "type": 1, "options": [{"type": 3, "name": "prompt", "value": "a brain with gears turning inside --v 5"}], "attachments": []}}'
+        # self.channelid = "1102068352932909158"#params["channelid"]
+        # self.authorization = "NzA5NzE3NjEwNTMwMzQwODk1.Gadpmg.RJt3txgm9406TB5MOLC-WVr-2ha97sEi6D56V0"#params["authorization"]
+        # self.application_id = "936929561302675456" #params["application_id"]
+        # self.guild_id = "1102068352366690336" #params["guild_id"]
+        # self.session_id = "0c5f26dc31f7c3f9f4683d1553817627"#params["session_id"]
+        # self.version = "1118961510123847772" #params["version"]
+        # self.id ="938956540159881230" #params["id"]
+        # self.flags = "--v 5"#params["flags"]

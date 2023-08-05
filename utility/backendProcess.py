@@ -6,10 +6,13 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
 import time
 from videogenerator.serializers import RequestSerializer
+from videogenerator.models import ProjectAssets
+from utility.tasks import sent_image_request, sent_audio_request
 
 
 # The number of simultaneous requests allowed by the buffer
 IMAGE_BUFFER_SIZE = 13
+# VOICE_KEY = ""
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
@@ -49,19 +52,52 @@ def path_to_request(request):
 
 def generate_video(request, script, path):
     sender = Sender(request.id)
-    # sender_json = sender.to_json()
+    sender_json = sender.to_json()
     # request_json = RequestSerializer(request).data
 
     # Process audios and images in parallel
-    a = time.time()
+    # a = time.time()
     # Process audios
     narration_dic = {}
     img_desc_dic = {}
+    image_folder = path + "/image"
+    voice_folder = request.voice if request.voice else 'adam'
+    audio_folder = path + f"/audio/{voice_folder}" 
+    if not os.path.exists(image_folder):
+        try:
+            os.makedirs(image_folder)
+        except FileExistsError:
+            # Handle the case when the directory is created by another process/thread
+            pass
+    if not os.path.exists(audio_folder):
+        try:
+            os.makedirs(audio_folder)
+        except FileExistsError:
+            # Handle the case when the directory is created by another process/thread
+            pass
+    asset = ProjectAssets.objects.create(request=request)
     for k, v in script.items():
-        narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
-        img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
-    b = time.time()
-    print(f'time:{b-a}')
+        image_file = image_folder + f"/{v[1].replace(' ', '_').lower()}.jpg"
+        # audio_file = audio_folder + f"/{v[0].repl}"
+        # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
+        voice_file = audio_folder + f"/{k}.mp3"
+        # print(image_file, voice_file)
+        asset.add_first_scene(k, image_file, voice_file)
+        sent_image_request.delay(image_folder, sender_json, v[1], request.id)
+        sent_audio_request.delay(voice_file, v[0], request.voice if request.voice else 'Adam')
+
+
+
+
+
+
+
+
+
+        # narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
+        # img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
+    # b = time.time()
+    # print(f'time:{b-a}')
 
    
 

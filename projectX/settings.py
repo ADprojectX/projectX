@@ -144,12 +144,16 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['videogenerator.routers.MongoDBRouter']
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TASK_SERIALIZER = 'json'
+# # Celery Configuration
+# CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL
+# # CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TASK_SERIALIZER = 'json'
+# # set the celery result backend
+# CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+# # set the celery timezone
+# CELERY_TIMEZONE = 'UTC'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

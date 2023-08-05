@@ -31,11 +31,10 @@ def remove_pending_tasks(prompt):
     rows = cursor.fetchall()
     if rows:
         for row in rows:
-            _, prompt, image_folder = row
+            _, prompt, image_folder, _ = row
         # Delete entry based on prompt
         cursor.execute("DELETE FROM videogenerator_pendingtask WHERE prompt=%s", (prompt,))
         connection.commit()
-        print(image_folder, 'zeher')
         return image_folder
     else:
         return None
