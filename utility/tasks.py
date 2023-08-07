@@ -1,5 +1,7 @@
-from celery import shared_task
+from celery import shared_task, current_task
 from celery.utils.log import get_task_logger
+import celery
+from elevenlabs.api.error import APIError
 from django.db import IntegrityError, OperationalError
 from utility.text_to_image import convert_to_image
 from utility.text_to_audio import convert_to_audio
@@ -10,6 +12,7 @@ import os
 import json
 from videogenerator.models import Request
 from time import sleep
+
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
 @shared_task(name='sent_image_request', retry_backoff=0.5, serializer='json')
@@ -36,9 +39,19 @@ def sent_image_request(image_folder, sender_json, prompt, request_id):
         logger.error(f"Error processing the request: {e}")
         raise sent_image_request.retry(exc=e)  # Automatically retry the task
 
-
-# narration_dic[k] = sent_audio_request.delay(path, k, v[0], request.voice if request.voice else 'Adam')
-@shared_task(name='sent_audio_request', retry_backoff=0.5, serializer='json')
+# @shared_task(name='sent_audio_request', max_concurrency=2, retry_backoff=1.1, serializer='json')
 def sent_audio_request(audio_folder, narration, voice):
-    convert_to_audio(audio_folder, narration, voice)
-    
+    try:
+        convert_to_audio(audio_folder, narration, voice)
+    except APIError as e:
+        # Retry the task when the APIError occurs
+        current_task.retry(exc=e)
+    else:
+        # Introduce a delay of 1 second between each task execution
+        sleep(1)
+
+
+
+
+
+

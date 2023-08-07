@@ -1,12 +1,22 @@
 from elevenlabs import clone, generate, voices, set_api_key
+from elevenlabs.api.error import APIError
+from celery import shared_task, current_task
+import celery
 import os
 from dotenv import load_dotenv
+import boto3
+from botocore.exceptions import NoCredentialsError
+from io import BytesIO
 
 load_dotenv()
 set_api_key(os.getenv("XI_SECRET_KEY"))
 voices = voices()
 VOICE_KEY = "{}"#"voice#{}"
 voice_folder = "voice_samples"
+ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
+SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET = os.getenv('AWS_BUCKET_STORE')#.split("//")[1].split("/")[0]
+print(AWS_BUCKET)
 
 def save_new_voice_samples():
     voice_list = {}
@@ -40,6 +50,19 @@ def save_voice_samples():
         with open(voice_path, "wb") as f:
             f.write(audio)
 
+def upload_audio_to_s3(audio_data, file_name):
+    s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
+    try:
+        # Create a file-like object from the audio data
+        audio_file = BytesIO(audio_data)
+        # Upload the audio file-like object to S3
+        s3.upload_fileobj(audio_file, AWS_BUCKET, file_name)
+        print("Upload Successful")
+        return True
+    except NoCredentialsError:
+        print("Credentials not available")
+        return False
+
 
 def convert_to_audio(voice_file, narration, voice_name):
     # audio_folder = request_folder + "/audio"
@@ -50,13 +73,20 @@ def convert_to_audio(voice_file, narration, voice_name):
     if voice is None:
         raise ValueError(f"Voice with name '{voice_name}' not found.")
 
-    audio = generate(text=narration, voice=voice)
+    # audio = generate(text=narration, voice=voice)
+    try:
+        audio = generate(text=narration, voice=voice)
+        upload_audio_to_s3(audio, voice_file)
+    except APIError as e:
+        # Retry the task when the APIError occurs
+        raise current_task.retry(exc=e)
+    # upload_audio_to_s3(audio, voice_file)
 
     # formatted_voice = VOICE_KEY.format(k) 
     # voice_path = audio_folder + f"/{formatted_voice}.mp3"
 
-    with open(voice_file, "wb") as f:
-        f.write(audio)
+    # with open(voice_file, "wb") as f:
+    #     f.write(audio)
 
 
 # save_new_voice_samples()

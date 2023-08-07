@@ -5,9 +5,12 @@ from dotenv import load_dotenv
 from PIL import Image
 import os
 import re
+import database as db
+import boto3
+from botocore.exceptions import NoCredentialsError
+import tempfile
 
 # from text_to_image import pending_tasks
-import database as db
 
 
 # dotenv_path = os.path.join(os.getcwd(), ".env")
@@ -16,6 +19,45 @@ CHANNEL_ID = os.getenv("CHANNEL_ID")
 discord_token = os.getenv("DISCORD_BOT_TOKEN")
 client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
+ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
+SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET = os.getenv('AWS_BUCKET_STORE')#.split("//")[1].split("/")[0]
+print(AWS_BUCKET)
+
+def upload_image_to_s3(image, file_name):
+    s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
+    try:
+        # Create a temporary file to save the image
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            image.save(temp_file, format="JPEG")
+            temp_file.flush()
+            # Upload the temporary file to S3
+            s3.upload_file(temp_file.name, AWS_BUCKET, file_name)
+        print("Upload Successful")
+        return True
+    except FileNotFoundError:
+        print("The file was not found")
+        return False
+    except NoCredentialsError:
+        print("Credentials not available")
+        return False
+
+# def read_image(file_path):
+#     try:
+#         image = Image.open(file_path)
+#         return image
+#     except FileNotFoundError:
+#         print(f"File not found: {file_path}")
+#         return None
+#     except Exception as e:
+#         print(f"Error while reading the image: {e}")
+#         return None
+
+# if __name__ == "__main__":
+#     file_path = "/Users/ad_demon/Documents/GitHub/projectX/Aatish_a_brain_with_gears_turning_inside.jpg"
+#     image = read_image(file_path)
+#     upload_image_to_s3(image, 'temp.jpg')
+    
 
 def split_image(image_file):
     with Image.open(image_file) as im:
@@ -62,18 +104,22 @@ async def download_image(url, filename, prompt):
             # Split the image
             top_left, top_right, bottom_left, bottom_right = split_image(input_file)
             # Save the output images with dynamic names in the output folder
-            top_left.save(
-                os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
-            )
-            top_right.save(
-                os.path.join(output_folder, "option2_" + file_prefix + ".jpg")
-            )
-            bottom_left.save(
-                os.path.join(output_folder, "option3_" + file_prefix + ".jpg")
-            )
-            bottom_right.save(
-                os.path.join(output_folder, "option4_" + file_prefix + ".jpg")
-            )
+            upload_image_to_s3(top_left, f"{output_folder}/option1_{file_prefix}.jpg")
+            upload_image_to_s3(top_right, f"{output_folder}/option2_{file_prefix}.jpg")
+            upload_image_to_s3(bottom_left, f"{output_folder}/option3_{file_prefix}.jpg")
+            upload_image_to_s3(bottom_right, f"{output_folder}/option4_{file_prefix}.jpg")
+            # top_left.save(
+            #     os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
+            # )
+            # top_right.save(
+            #     os.path.join(output_folder, "option2_" + file_prefix + ".jpg")
+            # )
+            # bottom_left.save(
+            #     os.path.join(output_folder, "option3_" + file_prefix + ".jpg")
+            # )
+            # bottom_right.save(
+            #     os.path.join(output_folder, "option4_" + file_prefix + ".jpg")
+            # )
 
         # else:
         #     os.rename(f"{directory}/{input_folder}/{filename}", f"{directory}/{output_folder}/{filename}")
