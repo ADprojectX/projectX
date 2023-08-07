@@ -15,7 +15,7 @@ from time import sleep
 
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
-@shared_task(name='sent_image_request', retry_backoff=0.5, serializer='json')
+@shared_task(name='sent_image_request', retry_backoff=0.5, serializer='json', queue='default')
 def sent_image_request(image_folder, sender_json, prompt, request_id):
     try:
         # Check if the buffer has less than 12 entries before proceeding
@@ -39,19 +39,10 @@ def sent_image_request(image_folder, sender_json, prompt, request_id):
         logger.error(f"Error processing the request: {e}")
         raise sent_image_request.retry(exc=e)  # Automatically retry the task
 
-# @shared_task(name='sent_audio_request', max_concurrency=2, retry_backoff=1.1, serializer='json')
+@shared_task(name='sent_audio_request', retry_backoff=1.1, serializer='json', queue='limited_queue')
 def sent_audio_request(audio_folder, narration, voice):
     try:
         convert_to_audio(audio_folder, narration, voice)
     except APIError as e:
         # Retry the task when the APIError occurs
         current_task.retry(exc=e)
-    else:
-        # Introduce a delay of 1 second between each task execution
-        sleep(1)
-
-
-
-
-
-

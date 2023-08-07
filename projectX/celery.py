@@ -1,15 +1,31 @@
 from celery import Celery
 from django.conf import settings
 import os
+from kombu import Queue
+
 # Create a Celery app object
 app = Celery('projectX')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projectX.settings")
 # Load the Celery settings from Django settings
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
+task_queues = (
+    Queue('limited_queue', priority=2,max_priority=2),
+    # Add other queues here if needed
+)
+# Set the custom queue for the task
+app.conf.task_routes = {
+    'projectX.utility.tasks.sent_audio_request': {'queue': 'limited_queue'},
+    'projectX.utility.tasks.sent_image_request': {'queue': 'default'},
+}
+# Limit the number of workers
+# Limit the number of workers for the limited_queue only
+# app.conf.worker_concurrency = {
+#     'limited_queue': 2,
+#     'default': 4,  # Set the desired concurrency for the default queue
+# }
 # Auto-discover tasks in all installed apps
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-
 # import os
 # from celery import Celery
   

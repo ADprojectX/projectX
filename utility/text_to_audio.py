@@ -16,7 +16,7 @@ voice_folder = "voice_samples"
 ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
 SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_BUCKET = os.getenv('AWS_BUCKET_STORE')#.split("//")[1].split("/")[0]
-print(AWS_BUCKET)
+# print(AWS_BUCKET)
 
 def save_new_voice_samples():
     voice_list = {}
