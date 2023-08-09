@@ -86,7 +86,7 @@ def generate_video(request, script, path):
         asset.add_first_scene(k, image_file, voice_file)
         # add celery chain
         # sent_image_request.delay(image_folder, sender_json, v[1], request.id)
-        sent_audio_request(voice_file, v[0], request.voice if request.voice else 'Adam')
+        # sent_audio_request(voice_file, v[0], request.voice if request.voice else 'Adam')
 
 
 
