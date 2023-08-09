@@ -10,13 +10,16 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projectX.settings")
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
 task_queues = (
-    Queue('limited_queue', priority=2,max_priority=2),
+    Queue('audio_queue', priority=2,max_priority=2),
+    Queue('image_queue', priority=10,max_priority=10),
+    Queue('video_generator_queue'),
     # Add other queues here if needed
 )
 # Set the custom queue for the task
 app.conf.task_routes = {
-    'projectX.utility.tasks.sent_audio_request': {'queue': 'limited_queue'},
-    'projectX.utility.tasks.sent_image_request': {'queue': 'default'},
+    'projectX.utility.tasks.sent_image_request': {'queue': 'image_queue'},
+    'projectX.utility.tasks.sent_audio_request': {'queue': 'audio_queue'},
+    'projectX.utility.tasks.captionated_video': {'queue': 'video_generator_queue'},
 }
 # Limit the number of workers
 # Limit the number of workers for the limited_queue only

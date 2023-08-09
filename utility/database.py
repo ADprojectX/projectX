@@ -9,24 +9,11 @@ db_user = os.getenv("DB_user")
 db_pwd = os.getenv("DB_password")
 db_database = os.getenv("DB_database")
 
-connection = pymysql.connect(
-    host=db_host, user=db_user, password=db_pwd, database=db_database
-)
-cursor = connection.cursor()
-
-
-# def add_pending_tasks(prompt, image_folder):
-#     cursor.execute(
-#         """CREATE TABLE IF NOT EXISTS pending_tasks (prompt text, image_folder text)"""
-#     )
-#     cursor.execute(
-#         "INSERT INTO pending_tasks (prompt, image_folder) VALUES (%s, %s)",
-#         (prompt, image_folder),
-#     )
-#     connection.commit()
-
-
 def remove_pending_tasks(prompt):
+    connection = pymysql.connect(
+    host=db_host, user=db_user, password=db_pwd, database=db_database
+    )
+    cursor = connection.cursor()
     cursor.execute("SELECT * FROM videogenerator_pendingtask WHERE prompt=%s", (prompt,))
     rows = cursor.fetchall()
     if rows:
@@ -45,3 +32,14 @@ def remove_pending_tasks(prompt):
 
 # data = cursor.fetchall()
 # connection.close()
+
+
+# def add_pending_tasks(prompt, image_folder):
+#     cursor.execute(
+#         """CREATE TABLE IF NOT EXISTS pending_tasks (prompt text, image_folder text)"""
+#     )
+#     cursor.execute(
+#         "INSERT INTO pending_tasks (prompt, image_folder) VALUES (%s, %s)",
+#         (prompt, image_folder),
+#     )
+#     connection.commit()

@@ -74,7 +74,8 @@ class Sender:
         print("prompt [{}] successfully sent!".format(prompt))
         return prompt
 
-
+# sender = Sender(50)
+# sender.send('a good man')
 # json <bound method Response.json of <Response [204]>>
 # text
 # content b''

@@ -1,5 +1,4 @@
 import json
-
 temp_script = """Narrator: "Welcome to today's videos, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
 
 Narrator: "Fact number 1: The Zeigarnik Effect."
@@ -36,6 +35,7 @@ Narrator: "Fact number 8: Cognitive Dissonance."
 
 Narrator: "Cognitive Dissonance is the mental discomfort we experience when our actions, beliefs, or attitudes are inconsistent with each other. To resolve this discomfort, we often change our beliefs or attitudes to align with our actions."
 """
+
 
 img_desc = '''Image Description: A brain with gears turning inside
 Image Description: A woman struggling to remember an unfinished task
