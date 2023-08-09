@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Request, Script, PendingTask
+from .models import Request, Script, ProjectAssets, Scene
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -11,7 +11,7 @@ import os
 import base64
 import zipfile
 import json
-from utility.backendProcess import process_scenes, process_image_desc, path_to_request, generate_video
+from utility.backendProcessInterface import process_scenes, process_image_desc, path_to_request, generate_initial_assets, get_current_images
 from utility.text_to_audio import get_voice_samples
 from django.http import StreamingHttpResponse
 from django.http import HttpResponse
@@ -23,7 +23,6 @@ OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 def create_request(request):
     jwt_token = request.COOKIES.get('jwt')
     # if not jwt_token:
-    #     print('gere')
     #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
@@ -45,13 +44,16 @@ def create_request(request):
 
     try:
         # Retrieve the existing Script object for the Request (if it exists)
-        script = Script.objects.get(request=req.id)
-        script.script_data = script_dict  # Update the script_data field
+        script = Script.objects.get(request=req)
+        script.save()
+        script.add_entire_script(script_dict)  # Update the script_data field
         script.save()  # Save the changes to the existing Script object
     except Script.DoesNotExist:
         # If the Script object doesn't exist, create a new one
-        script = Script.objects.create(request=req, script_data=script_dict)
-
+        script = Script.objects.create(request=req)
+        script.save()
+        script.add_entire_script(script_dict)
+        script.save()
     return Response({'message': 'Request created successfully', 'script': script_dict, 'reqid': req.id})
 
 
@@ -62,8 +64,10 @@ def get_script(request):
         req = Request.objects.get(id=req_id)
         try:
             script = Script.objects.get(request=req)
-            script_dict = script.script_data
-            return Response({'message': 'Script retrieved successfully', 'script': script_dict})
+            current_script = script.get_current_script()
+            # script_dict = script.script_data
+            print(current_script)
+            return Response({'message': 'Script retrieved successfully', 'script': current_script})
         except Script.DoesNotExist:
             return Response({'message': 'Script not found'}, status=status.HTTP_404_NOT_FOUND)
     except Request.DoesNotExist:
@@ -86,14 +90,14 @@ def save_script(request):
             script_dict = json.loads(final_scene)
             
             # Check if a Script object exists for the Request
-            script, created = Script.objects.get_or_create(request=req_id)  # Use request_id for the lookup
+            script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
             # Update the script_data field in the Script model
-            script.script_data = process_image_desc(script_dict)
-            script.save()  # Save the changes to the database
+            initial_script = process_image_desc(script_dict)
+            script.add_entire_script(initial_script)
             
-            request_path = path_to_request(req)
-            generate_video(req, script.script_data, request_path)
+            # request_path = path_to_request(req)
+            # generate_initial_assets(req, script.script_data, request_path, 'mjx')
 
             if not created:
                 return Response({'success': True})
@@ -149,8 +153,16 @@ def voice_samples(request):
 
     return Response(serialized_voice_samples)
 
+@api_view(["GET"])
+def get_thumbnail_images(request):
+    # req_id = request.query_params.get('reqid')
+    req = Request.objects.get(id=77)
+    img_asset = ProjectAssets.objects.get(request=req)
+    return Response()
 
-
+@api_view(["GET"])
+def get_user_projects(request):
+    pass
 # @api_view(["GET"])
 # def set_voice(request):
 #     req_id = request.GET.get('reqid')

@@ -7,19 +7,11 @@ from utility.script import img_desc
 import time
 from videogenerator.serializers import RequestSerializer
 from videogenerator.models import ProjectAssets
-from utility.tasks import sent_image_request, sent_audio_request
-from dotenv import load_dotenv
-import boto3
-from botocore.exceptions import NoCredentialsError
+from utility.tasks import sent_image_request, sent_audio_request, captionated_video
 
-load_dotenv()
-
-AWS_OBJECT_STORE = os.getenv("AWS_STORE")
-s3_client = boto3.client('s3')
 
 # The number of simultaneous requests allowed by the buffer
 IMAGE_BUFFER_SIZE = 13
-# VOICE_KEY = ""
 
 # OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
@@ -27,7 +19,7 @@ def process_scenes(request):
     topic = request.data.get('topic')
     # processed_topic = tp.process_input(topic)  # request str process(text)
     # script_response = osr.request_script(processed_topic) #openai request for script
-    scene_dic = tp.script_processing(temp_script)  # dictionary generatin for narration and img desc
+    scene_dic = tp.script_processing(temp_script)  # dictionary generating for narration and img desc
     return scene_dic
 
 def process_image_desc(script):
@@ -52,41 +44,36 @@ def path_to_request(request):
     None if os.path.exists(request_folder) else os.makedirs(request_folder)
     return request_folder
 
-
-# def process_image_with_semaphore(request_folder, sender, prompt, semaphore, request):
-#     with semaphore:
-#         return tti.convert_to_image(request_folder, sender, prompt, request)
-
-def generate_video(request, script, path):
+def path_to_asset(*args, **kwargs):
+    sub_path = ''
+    for arg in args:
+        sub_path+arg+'/'
+    return sub_path[:-1] if sub_path else None
+    
+def generate_initial_assets(request, script, path, img_type, *args, **kwargs):
     sender = Sender(request.id)
     sender_json = sender.to_json()
-
-    image_folder = path + "/image"
-    voice_folder = request.voice if request.voice else 'adam'
-    audio_folder = path + f"/audio/{voice_folder}" 
-    # if not os.path.exists(image_folder):
-    #     try:
-    #         os.makedirs(image_folder)
-    #     except FileExistsError:
-    #         # Handle the case when the directory is created by another process/thread
-    #         pass
-    # if not os.path.exists(audio_folder):
-    #     try:
-    #         os.makedirs(audio_folder)
-    #     except FileExistsError:
-    #         # Handle the case when the directory is created by another process/thread
-    #         pass
+    image_asset = path_to_asset('image',img_type)
+    voice_asset = path_to_asset('audio','XIL')
+    image_folder = path + f"{'/'+ image_asset if image_asset else None}"  #f"/image/{img_type}"
+    audio_folder = path + f"{'/'+ voice_asset if voice_asset else None}"  #f"/audio/{voice_folder}" 
     asset = ProjectAssets.objects.create(request=request)
     for k, v in script.items():
-        image_file = image_folder + f"/{v[1].replace(' ', '_').lower()}.jpg"
+        image_file = image_folder + f"{k}/{request.voice}/{v[1].replace(' ', '_').lower()}.jpg"
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
         voice_file = audio_folder + f"/{k}.mp3"
-        print(image_file, voice_file)
+        # print(image_file, voice_file)
         asset.add_first_scene(k, image_file, voice_file)
         # add celery chain
         # sent_image_request.delay(image_folder, sender_json, v[1], request.id)
-        # sent_audio_request(voice_file, v[0], request.voice if request.voice else 'Adam')
+        # sent_audio_request.delay(voice_file, v[0], request.voice if request.voice else 'Adam')
+
+    captionated_video.delay(asset)
+
+
+def get_current_images(request):
+    pass
 
 
 
@@ -95,11 +82,6 @@ def generate_video(request, script, path):
 
 
 
-
-        # narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
-        # img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
-    # b = time.time()
-    # print(f'time:{b-a}')
 
    
 
@@ -124,6 +106,12 @@ def generate_video(request, script, path):
 
 
 ########################################################################################################################################################################################################################################################################
+        # narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
+        # img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
+    # b = time.time()
+    # print(f'time:{b-a}')
+
+
     # # narration_dic = {}
     # # img_desc_dic = {}
     # # Create a sender for audio processing
@@ -149,6 +137,9 @@ def generate_video(request, script, path):
     #     for k, future in narration_dic.items():
     #         narration_dic[k] = future.result()
 
+# def process_image_with_semaphore(request_folder, sender, prompt, semaphore, request):
+#     with semaphore:
+#         return tti.convert_to_image(request_folder, sender, prompt, request)
 
 
 
@@ -164,3 +155,17 @@ def generate_video(request, script, path):
     #     # narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], 0)# voice)
     #     img_desc_dic[k] = tti.convert_to_image(request_folder, sender, v[1])
     # # return HttpResponse("Request processed successfully!")
+
+    
+    # if not os.path.exists(image_folder):
+    #     try:
+    #         os.makedirs(image_folder)
+    #     except FileExistsError:
+    #         # Handle the case when the directory is created by another process/thread
+    #         pass
+    # if not os.path.exists(audio_folder):
+    #     try:
+    #         os.makedirs(audio_folder)
+    #     except FileExistsError:
+    #         # Handle the case when the directory is created by another process/thread
+    #         pass

@@ -3,7 +3,9 @@ from moviepy.editor import *
 from pydub import AudioSegment
 from moviepy.config import change_settings
 import sys
-sys.path.append('/Users/ad_demon/Documents/GitHub/projectX/captions')
+import os
+
+sys.path.append(os.path.join(os.getcwd()))#('/Users/ad_demon/Documents/GitHub/projectX/captions')
 from captions.align2 import align_audio_text
 
 

@@ -44,7 +44,7 @@ def login_user(request):
             payload = {
                 'uuid': str(uuid.uuid4()),
                 'last_login': user.last_login.strftime('%Y-%m-%d %H:%M:%S.%f') if user.last_login else None,
-                'id': user.id,
+                'id': str(user.id),
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
                 'iat': datetime.datetime.utcnow()
             }
