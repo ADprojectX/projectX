@@ -75,11 +75,13 @@ def get_script(request):
 
 # Your other views here (save_script, get_video_files, voice_samples, voice_view)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def save_script(request):
-    final_scene = request.query_params.get('finalScene', None)
-    req_id = request.query_params.get('reqid')
-    voice = request.query_params.get('voice')
+    payload = request.data
+    req_id = payload.get('reqid')
+    voice = payload.get('voice')
+    final_scene = payload.get('scenes')
+
     if final_scene and req_id:
         try:
             # Retrieve the associated Request object
