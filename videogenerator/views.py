@@ -26,6 +26,7 @@ def user_authorization(jwt_token):
         user = User.objects.get(id=user_id)
         if not user.is_authenticated:
             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+        return user
     except jwt.exceptions.InvalidTokenError:
         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
     except User.DoesNotExist:
@@ -37,16 +38,8 @@ def create_request(request):
     # if not jwt_token:
     #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
     user = user_authorization(jwt_token)
-    # try:
-    #     payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
-    #     user_id = payload.get('id')
-    #     user = User.objects.get(id=user_id)
-    #     if not user.is_authenticated:
-    #         return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-    # except jwt.exceptions.InvalidTokenError:
-    #     return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
-    # except User.DoesNotExist:
-    #     return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+    if user is None:
+        return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
     req = Request.objects.create(user=user, topic=topic)

@@ -89,6 +89,9 @@ class ProjectAssets(models.Model):
     asset_path = models.JSONField(null=True)
     currently_used_asset = models.JSONField(null=True)
 
+    def add_new_asset(self):
+        pass
+
 class PendingTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     prompt = models.CharField(max_length=255, null=True)  # Set a key length for the unique index

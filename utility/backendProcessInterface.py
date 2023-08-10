@@ -66,7 +66,7 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
     audio_folder = path + f"{'/'+ voice_asset if voice_asset else None}"  #f"/audio/{voice_folder}" 
     for scene_id in script:
         scene = Scene.objects.get(id = scene_id)
-        asset, created = ProjectAssets.objects.update_or_create(scene_id=scene)
+        asset = ProjectAssets.objects.update_or_create(scene_id=scene)
         image_file = image_folder + f"/{scene_id}/{scene.image_desc.replace(' ', '_').lower()}.jpg"
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
