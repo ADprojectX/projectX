@@ -62,7 +62,7 @@ class Script(models.Model):
         for i, uuid in enumerate(self.current_scenes):
             try:
                 scene = Scene.objects.get(id=uuid)
-                cur_script.append([i, uuid, scene.narration, scene.image_desc])
+                cur_script.append([i, uuid, scene.narration])
             except Scene.DoesNotExist:
                 # Handle the case where the scene does not exist
                 cur_script.append([i])
