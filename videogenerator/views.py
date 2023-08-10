@@ -19,12 +19,7 @@ from wsgiref.util import FileWrapper
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
-@api_view(['POST'])
-def create_request(request):
-    jwt_token = request.COOKIES.get('jwt')
-    # if not jwt_token:
-    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
-
+def user_authorization(jwt_token):
     try:
         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
         user_id = payload.get('id')
@@ -35,6 +30,23 @@ def create_request(request):
         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
     except User.DoesNotExist:
         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST'])
+def create_request(request):
+    jwt_token = request.COOKIES.get('jwt')
+    # if not jwt_token:
+    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+    user = user_authorization(jwt_token)
+    # try:
+    #     payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
+    #     user_id = payload.get('id')
+    #     user = User.objects.get(id=user_id)
+    #     if not user.is_authenticated:
+    #         return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+    # except jwt.exceptions.InvalidTokenError:
+    #     return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
+    # except User.DoesNotExist:
+    #     return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
     req = Request.objects.create(user=user, topic=topic)
@@ -98,8 +110,8 @@ def save_script(request):
             initial_script = process_image_desc(script_dict)
             script.add_entire_script(initial_script)
             
-            # request_path = path_to_request(req)
-            # generate_initial_assets(req, script.script_data, request_path, 'mjx')
+            request_path = path_to_request(req)
+            generate_initial_assets(req, script.current_scenes, request_path, 'mjx')
 
             if not created:
                 return Response({'success': True})
@@ -164,7 +176,12 @@ def get_thumbnail_images(request):
 
 @api_view(["GET"])
 def get_user_projects(request):
-    pass
+    jwt_token = request.COOKIES.get('jwt')
+    # if not jwt_token:
+    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+    user = user_authorization(jwt_token)
+    user_requests = Request.objects.filter(user=user)
+    return user_requests
 # @api_view(["GET"])
 # def set_voice(request):
 #     req_id = request.GET.get('reqid')

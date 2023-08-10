@@ -81,6 +81,9 @@ class Scene(models.Model):
     image_desc = models.TextField(null=True)
     script = models.OneToOneField(Script, on_delete=models.CASCADE, related_name='scenes')
 
+    def get_scene(self):
+        return self.narration, self.image_desc
+
 class ProjectAssets(models.Model):
     scene_id = models.OneToOneField(Scene, on_delete=models.CASCADE, primary_key=True, editable=False)
     asset_path = models.JSONField(null=True)

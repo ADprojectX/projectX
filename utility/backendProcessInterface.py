@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
 import time
 from videogenerator.serializers import RequestSerializer
-from videogenerator.models import ProjectAssets
+from videogenerator.models import ProjectAssets, Scene
 from utility.tasks import sent_image_request, sent_audio_request, captionated_video
 
 
@@ -57,21 +57,22 @@ def path_to_asset(*args, **kwargs):
         sub_path+arg+'/'
     return sub_path[:-1] if sub_path else None
     
-def generate_initial_assets(request, script, path, img_type, *args, **kwargs):
-    sender = Sender(request.id)
+def generate_initial_assets(request, script, path, img_service, *args, **kwargs):
+    sender = Sender(str(request.id))
     sender_json = sender.to_json()
-    image_asset = path_to_asset('image',img_type)
+    image_asset = path_to_asset('image',img_service)
     voice_asset = path_to_asset('audio','XIL')
     image_folder = path + f"{'/'+ image_asset if image_asset else None}"  #f"/image/{img_type}"
     audio_folder = path + f"{'/'+ voice_asset if voice_asset else None}"  #f"/audio/{voice_folder}" 
-    asset = ProjectAssets.objects.create(request=request)
-    for k, v in script.items():
-        image_file = image_folder + f"{k}/{request.voice}/{v[1].replace(' ', '_').lower()}.jpg"
+    for scene_id in script:
+        scene = Scene.objects.get(id = scene_id)
+        asset, created = ProjectAssets.objects.update_or_create(scene_id=scene)
+        image_file = image_folder + f"/{scene_id}/{scene.image_desc.replace(' ', '_').lower()}.jpg"
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
-        voice_file = audio_folder + f"/{k}.mp3"
+        voice_file = audio_folder + f"/{scene_id}.mp3"
         # print(image_file, voice_file)
-        asset.add_first_scene(k, image_file, voice_file)
+        # asset.add_first_scene(k, image_file, voice_file)
         # add celery chain
         # sent_image_request.delay(image_folder, sender_json, v[1], request.id)
         # sent_audio_request.delay(voice_file, v[0], request.voice if request.voice else 'Adam')
