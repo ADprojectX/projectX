@@ -47,7 +47,8 @@ def sent_audio_request(audio_folder, narration, voice):
         # Retry the task when the APIError occurs
         current_task.retry(exc=e)
 
-@shared_task(name='sent_audio_request', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
-def captionated_video(assets, **args):
-    assets.currently_used_asset
-    pass
+@shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
+def captionated_video(assets):
+    for asset in assets:
+        pass
+        

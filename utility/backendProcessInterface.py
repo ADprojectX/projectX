@@ -5,7 +5,7 @@ from utility.script import temp_script
 from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
 import time
-from videogenerator.serializers import RequestSerializer
+from videogenerator.serializers import RequestSerializer, ProjectAssetsSerializer
 from videogenerator.models import ProjectAssets, Scene
 from utility.tasks import sent_image_request, sent_audio_request, captionated_video
 
@@ -64,116 +64,25 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
     voice_asset = path_to_asset('audio','XIL')
     image_folder = path + f"{'/'+ image_asset if image_asset else None}"  #f"/image/{img_type}"
     audio_folder = path + f"{'/'+ voice_asset if voice_asset else None}"  #f"/audio/{voice_folder}" 
+    asset_list = []
     for scene_id in script:
         scene = Scene.objects.get(id = scene_id)
-        asset = ProjectAssets.objects.update_or_create(scene_id=scene)
+        asset, _ = ProjectAssets.objects.update_or_create(scene_id=scene)
         image_file = image_folder + f"/{scene_id}/{scene.image_desc.replace(' ', '_').lower()}.jpg"
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
-        voice_file = audio_folder + f"/{scene_id}.mp3"
+        voice_file = audio_folder + f"/{scene_id}/0.mp3"
         # print(image_file, voice_file)
-        # asset.add_first_scene(k, image_file, voice_file)
+        asset.add_new_asset(image = image_file, audio = voice_file)
+        asset_list.append([image_file, voice_file])
         # add celery chain
-        # sent_image_request.delay(image_folder, sender_json, v[1], request.id)
-        # sent_audio_request.delay(voice_file, v[0], request.voice if request.voice else 'Adam')
-
-    captionated_video.delay(asset)
+        sent_image_request.delay(image_folder, sender_json, scene.image_desc, request.id)
+        sent_audio_request.delay(voice_file, scene.narration, request.voice if request.voice else 'Adam')
+        captionated_video.delay([image_file, voice_file])    
+    # serializer = ProjectAssetsSerializer(instance=asset)
+    # serialized_data = serializer.data
 
 
 def get_current_images(request):
     pass
 
-
-
-
-
-
-
-
-
-   
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-########################################################################################################################################################################################################################################################################
-        # narration_dic[k] = tta.convert_to_audio(path, k, v[0], request.voice if request.voice else 'Romi')
-        # img_desc_dic[k] = tti.convert_to_image(path, sender, v[1], request)
-    # b = time.time()
-    # print(f'time:{b-a}')
-
-
-    # # narration_dic = {}
-    # # img_desc_dic = {}
-    # # Create a sender for audio processing
-    # sender = Sender(request_id)
-    # scene_dic = {}
-    # # Process audios and images in parallel
-    # with concurrent.futures.ThreadPoolExecutor(max_workers=IMAGE_BUFFER_SIZE + 1) as executor:
-    #     # Process audios
-    #     narration_dic = {}
-    #     for k, v in scene_dic.items():
-    #         narration_dic[k] = executor.submit(tta.convert_to_audio, request_folder, k, v[0], 0)
-
-    #     # Process images
-    #     image_tasks = []
-    #     for k, v in scene_dic.items():
-    #         image_task = executor.submit(tti.convert_to_image, request_folder, sender, v[1])
-    #         image_tasks.append(image_task)
-
-    #     # Wait for all audio and image tasks to complete
-    #     concurrent.futures.wait(narration_dic.values() + image_tasks)
-
-    #     # Retrieve results from audio tasks
-    #     for k, future in narration_dic.items():
-    #         narration_dic[k] = future.result()
-
-# def process_image_with_semaphore(request_folder, sender, prompt, semaphore, request):
-#     with semaphore:
-#         return tti.convert_to_image(request_folder, sender, prompt, request)
-
-
-
-
-
-
-
-
-    # sender = Sender(request_id)
-
-    # for k, v in scene_dic.items():
-    #     # calling audio conversion and img coversion and storing into above dictionaries
-    #     # narration_dic[k] = tta.convert_to_audio(request_folder, k, v[0], 0)# voice)
-    #     img_desc_dic[k] = tti.convert_to_image(request_folder, sender, v[1])
-    # # return HttpResponse("Request processed successfully!")
-
-    
-    # if not os.path.exists(image_folder):
-    #     try:
-    #         os.makedirs(image_folder)
-    #     except FileExistsError:
-    #         # Handle the case when the directory is created by another process/thread
-    #         pass
-    # if not os.path.exists(audio_folder):
-    #     try:
-    #         os.makedirs(audio_folder)
-    #     except FileExistsError:
-    #         # Handle the case when the directory is created by another process/thread
-    #         pass

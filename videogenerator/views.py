@@ -42,6 +42,7 @@ def create_request(request):
         return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
+    print(topic, 'asfyat')
     req = Request.objects.create(user=user, topic=topic)
 
     # Process the request and generate the script as a dictionary

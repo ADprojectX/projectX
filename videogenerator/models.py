@@ -89,8 +89,18 @@ class ProjectAssets(models.Model):
     asset_path = models.JSONField(null=True)
     currently_used_asset = models.JSONField(null=True)
 
-    def add_new_asset(self):
-        pass
+    def add_new_asset(self, **kwargs):
+        if self.asset_path is None:
+            self.asset_path = {}
+        if self.currently_used_asset is None:
+            self.currently_used_asset = {}
+        else:
+            self.currently_used_asset.clear()
+            self.currently_used_asset = {}
+        for k, v in kwargs.items():
+            self.asset_path.setdefault(k, []).append(v)
+            self.currently_used_asset.setdefault(k, []).append(v)
+        self.save()
 
 class PendingTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
