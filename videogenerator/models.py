@@ -26,7 +26,7 @@ class Script(models.Model):
     class Meta:
         unique_together = ['request']
 
-    def add_entire_script(self, script_dict):
+    def add_entire_script(self, script_list):
         if "script_scenes" not in self.__dict__ or self.script_scenes is None:
             self.script_scenes = []
 
@@ -34,9 +34,9 @@ class Script(models.Model):
             self.current_scenes = []
         self.current_scenes.clear()
         new_current_scenes = []
-        for scene_uuid_str, desc_list in script_dict.items():
-            narration = desc_list[0]
-            img_desc = desc_list[1] if len(desc_list) > 1 else None
+        for i, scene_uuid_str, narr, img in script_list:
+            narration = narr
+            img_desc = img if img else None
             # Get or create the scene, and check if it was created anew
             scene, created = Scene.objects.get_or_create(
                 id=uuid.UUID(scene_uuid_str),

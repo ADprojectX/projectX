@@ -77,9 +77,9 @@ def get_script(request):
 
 @api_view(['GET'])
 def save_script(request):
-    final_scene = request.query_params.get('finalScene', None)
+    final_scene = request.GET.get('data')
     req_id = request.query_params.get('reqid')
-    voice = request.query_params.get('voice')
+    voice = request.GET.get('voice')
     if final_scene and req_id:
         try:
             # Retrieve the associated Request object

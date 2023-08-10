@@ -29,8 +29,11 @@ def process_image_desc(script):
     img_desc_list = img_desc.split('\n')
     # Remove the "Image Description: " prefix from each string
     img_desc_list = [desc.replace('Image Description: ', '') for desc in img_desc_list]
-    for i, scene in enumerate(script.keys()):
-        script[scene].append(img_desc_list[i])
+    for i, uuid, scene, img in script:
+        if len(script[i])<4:
+            script[i].append(img_desc_list[i])
+        else:
+            script[i][3]=img_desc_list[i]
     ######################temporary#################################
     
     # for scene,narration in script.items():
