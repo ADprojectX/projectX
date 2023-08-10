@@ -32,14 +32,16 @@ class Script(models.Model):
 
         if "current_scenes" not in self.__dict__ or self.current_scenes is None:
             self.current_scenes = []
+
         self.current_scenes.clear()
         new_current_scenes = []
+        print(script_list)
         for i, scene_uuid_str, narr, img in script_list:
             narration = narr
             img_desc = img if img else None
             # Get or create the scene, and check if it was created anew
+            id=uuid.UUID(scene_uuid_str),
             scene, created = Scene.objects.get_or_create(
-                id=uuid.UUID(scene_uuid_str),
                 narration=narration,
                 image_desc=img_desc,
                 script = self
