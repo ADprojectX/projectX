@@ -39,13 +39,16 @@ class Script(models.Model):
         for i, scene_uuid_str, narr, img in script_list:
             narration = narr
             img_desc = img if img else None
-            # Get or create the scene, and check if it was created anew
-            scene, created = Scene.objects.get_or_create(
-                id=uuid.UUID(scene_uuid_str) if scene_uuid_str else str(uuid.uuid4()),
-                narration=narration,
-                image_desc=img_desc,
-                script = self
-            )
+            # Get or create the scene, and check if it was created a new
+            scene, created = Scene.objects.update_or_create(
+                    id=uuid.UUID(scene_uuid_str) if scene_uuid_str else str(uuid.uuid4()),
+                    defaults={
+                        'narration': narration,
+                        'image_desc': img_desc,
+                        'script': self
+                    }
+                )
+
             print('created', created)
             new_current_scenes.append(str(scene.id))
             print(new_current_scenes)
@@ -59,8 +62,11 @@ class Script(models.Model):
 
     def get_current_script(self):
         cur_script = []
+        print("CURRENT SCENES")
+        print(self.current_scenes)
         for i, uuid in enumerate(self.current_scenes):
             try:
+
                 scene = Scene.objects.get(id=uuid)
                 cur_script.append([i, uuid, scene.narration])
             except Scene.DoesNotExist:
