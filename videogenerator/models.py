@@ -40,8 +40,8 @@ class Script(models.Model):
             narration = narr
             img_desc = img if img else None
             # Get or create the scene, and check if it was created anew
-            id=uuid.UUID(scene_uuid_str),
             scene, created = Scene.objects.get_or_create(
+                id=uuid.UUID(scene_uuid_str) if scene_uuid_str else str(uuid.uuid4()),
                 narration=narration,
                 image_desc=img_desc,
                 script = self
