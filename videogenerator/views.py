@@ -171,11 +171,9 @@ def get_thumbnail_images(request):
 @api_view(["GET"])
 def get_user_projects(request):
     jwt_token = request.COOKIES.get('jwt')
-    # if not jwt_token:
-    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
     user = user_authorization(jwt_token)
-    user_requests = Request.objects.filter(user=user)
-    return user_requests
+    user_requests = Request.objects.filter(user=user).values()
+    return Response(user_requests)
 # @api_view(["GET"])
 # def set_voice(request):
 #     req_id = request.GET.get('reqid')
