@@ -35,7 +35,6 @@ class Script(models.Model):
 
         self.current_scenes.clear()
         new_current_scenes = []
-        print(script_list)
         for i, scene_uuid_str, narr, img in script_list:
             narration = narr
             img_desc = img if img else None
@@ -48,10 +47,7 @@ class Script(models.Model):
                         'script': self
                     }
                 )
-
-            print('created', created)
             new_current_scenes.append(str(scene.id))
-            print(new_current_scenes)
             if created:
                 # If the scene was created a new, add it to the relationships
                 self.script_scenes.append(str(scene.id))
@@ -62,8 +58,6 @@ class Script(models.Model):
 
     def get_current_script(self):
         cur_script = []
-        print("CURRENT SCENES")
-        print(self.current_scenes)
         for i, uuid in enumerate(self.current_scenes):
             try:
 

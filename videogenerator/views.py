@@ -17,6 +17,7 @@ from django.http import StreamingHttpResponse
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
+
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
 def user_authorization(jwt_token):
@@ -42,7 +43,6 @@ def create_request(request):
         return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
 
     topic = request.data.get('topic')
-    print(topic, 'asfyat')
     req = Request.objects.create(user=user, topic=topic)
 
     # Process the request and generate the script as a dictionary
@@ -51,15 +51,11 @@ def create_request(request):
     try:
         # Retrieve the existing Script object for the Request (if it exists)
         script = Script.objects.get(request=req)
-        script.save()
         script.add_entire_script(script_dict)  # Update the script_data field
-        script.save()  # Save the changes to the existing Script object
     except Script.DoesNotExist:
         # If the Script object doesn't exist, create a new one
         script = Script.objects.create(request=req)
-        script.save()
         script.add_entire_script(script_dict)
-        script.save()
     return Response({'message': 'Request created successfully', 'script': script_dict, 'reqid': req.id})
 
 
@@ -72,7 +68,6 @@ def get_script(request):
             script = Script.objects.get(request=req)
             current_script = script.get_current_script()
             # script_dict = script.script_data
-            print(current_script)
             return Response({'message': 'Script retrieved successfully', 'script': current_script})
         except Script.DoesNotExist:
             return Response({'message': 'Script not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -96,7 +91,7 @@ def save_script(request):
             req.save()
             # Deserialize the final_scene JSON string to a Python object
             script_dict = json.loads(final_scene)
-            
+            # print(script_dict)
             # Check if a Script object exists for the Request
             script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
@@ -174,6 +169,7 @@ def get_user_projects(request):
     user = user_authorization(jwt_token)
     user_requests = Request.objects.filter(user=user).values()
     return Response(user_requests)
+
 # @api_view(["GET"])
 # def set_voice(request):
 #     req_id = request.GET.get('reqid')
