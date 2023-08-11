@@ -3,7 +3,8 @@ from moviepy.editor import *
 from pydub import AudioSegment
 from moviepy.config import change_settings
 import sys
-sys.path.append('/Users/aatishdhami/Desktop/ProjectX/projectX/captions')
+import os
+sys.path.append(os.path.join(os.getcwd(), 'captions'))
 from captions.align2 import align_audio_text
 
 def generate_captions(video_file, audio_file, text):
@@ -36,9 +37,9 @@ def generate_captions(video_file, audio_file, text):
     # final_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")
 
 
-if __name__ == "__main__":
-    video_file = "./sample_video.mp4"
-    audio_file = "./sample_audio.wav"
-    text = "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
-    output_video = generate_captions(video_file, audio_file, text)
-    output_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")
+# if __name__ == "__main__":
+#     video_file = "./sample_video.mp4"
+#     audio_file = "./sample_audio.wav"
+#     text = "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+#     output_video = generate_captions(video_file, audio_file, text)
+#     output_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")

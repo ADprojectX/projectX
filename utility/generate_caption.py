@@ -4,8 +4,8 @@ from pydub import AudioSegment
 from moviepy.config import change_settings
 import sys
 import os
-
-sys.path.append(os.path.join(os.getcwd()))#('/Users/ad_demon/Documents/GitHub/projectX/captions')
+import tempfile
+# sys.path.append(os.path.join(os.getcwd()))#('/Users/ad_demon/Documents/GitHub/projectX/captions')
 from captions.align2 import align_audio_text
 
 
@@ -35,14 +35,23 @@ def generate_captions(video_file, audio_file, text):
             subtitles.append(final_clip)
 
     final_video = CompositeVideoClip([video] + subtitles)
+    # Create a temporary file to store the video output
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_video_file:
+        temp_video_path = temp_video_file.name
+        final_video.write_videofile(temp_video_path, codec='libx264')
+        
+    # Read the temporary video file as bytes-like object
+    with open(temp_video_path, 'rb') as temp_file:
+        video_data = temp_file.read()
+    
     print("Returning from generate captions")
-    return final_video
+    return video_data
     # final_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")
 
 
-if __name__ == "__main__":
-    video_file = "./sample_video.mp4"
-    audio_file = "./sample_audio.wav"
-    text = "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
-    output_video = generate_captions(video_file, audio_file, text)
-    output_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")
+# if __name__ == "__main__":
+#     video_file = "./sample_video.mp4"
+#     audio_file = "./sample_audio.wav"
+#     text = "Welcome to today's video, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+#     output_video = generate_captions(video_file, audio_file, text)
+#     output_video.write_videofile("output_video.mp4", codec="libx264", audio_codec="aac")

@@ -1,17 +1,18 @@
 from celery import shared_task, current_task
 from celery.utils.log import get_task_logger
-import celery
 from elevenlabs.api.error import APIError
-from django.db import IntegrityError, OperationalError
 from utility.text_to_image import convert_to_image
 from utility.text_to_audio import convert_to_audio
 from utility.sender import Sender
+from utility.create_video import create_vid
+from utility.generate_caption import generate_captions
 from videogenerator.models import PendingTask
 import re
-import os
 import json
 from videogenerator.models import Request
 from time import sleep
+from utility.aws_connector import *
+from tempfile import NamedTemporaryFile
 
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
@@ -47,8 +48,41 @@ def sent_audio_request(audio_folder, narration, voice):
         # Retry the task when the APIError occurs
         current_task.retry(exc=e)
 
-@shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
-def captionated_video(assets):
-    for asset in assets:
-        pass
+# @shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
+def captionated_video(assets, narration, imv_path):
+    image = None
+    image_live = None
+    video = None
+    audio = None
+    for k,v in assets.items():
+        if k == 'audio':
+            while not check_file_exists(v):
+                print('here')
+                print(v)
+                continue
+            audio = get_file_from_s3(v)
+        if k == 'image':
+            print('here')
+            print(v)
+            while not check_file_exists(v):
+                continue
+            image = get_file_from_s3(v)
+    with NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio_file:
+        temp_audio_file.write(audio)
+        temp_audio_file_path = temp_audio_file.name
+    with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_image_file:
+        temp_image_file.write(image)
+        temp_image_file_path = temp_image_file.name
+    if image and audio and not image_live:
+        image_live = create_vid(temp_audio_file_path, temp_image_file_path)
+    imv_scene = generate_captions(image_live, temp_audio_file_path, narration)
+    upload_file_to_s3(imv_scene,imv_path)
+        # if k == 'video' and not video:
+        #     while not check_file_exists(v):
+        #         continue
+        #     video = get_file_from_s3(v)
+    
+    
+    
+        
         

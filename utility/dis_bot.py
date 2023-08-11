@@ -9,7 +9,7 @@ import database as db
 import boto3
 from botocore.exceptions import NoCredentialsError
 import tempfile
-
+from aws_connector import count_files_in_s3_folder
 # from text_to_image import pending_tasks
 
 
@@ -22,7 +22,6 @@ client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
 SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_BUCKET = os.getenv('AWS_BUCKET_STORE')#.split("//")[1].split("/")[0]
-print(AWS_BUCKET)
 
 def upload_image_to_s3(image, file_name):
     s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
@@ -100,14 +99,15 @@ async def download_image(url, filename, prompt):
 
         if "UPSCALED_" not in filename:
             # file_prefix = os.path.splitext(filename)[0]
-            file_prefix = prompt
+            file_prefix = prompt.replace(" ", '_').lower()
             # Split the image
             top_left, top_right, bottom_left, bottom_right = split_image(input_file)
             # Save the output images with dynamic names in the output folder
-            upload_image_to_s3(top_left, f"{output_folder}/option1_{file_prefix}.jpg")
-            upload_image_to_s3(top_right, f"{output_folder}/option2_{file_prefix}.jpg")
-            upload_image_to_s3(bottom_left, f"{output_folder}/option3_{file_prefix}.jpg")
-            upload_image_to_s3(bottom_right, f"{output_folder}/option4_{file_prefix}.jpg")
+            i = count_files_in_s3_folder(output_folder)
+            upload_image_to_s3(top_left, f"{output_folder}/option{i+1}_{file_prefix}.jpg")
+            upload_image_to_s3(top_right, f"{output_folder}/option{i+2}_{file_prefix}.jpg")
+            upload_image_to_s3(bottom_left, f"{output_folder}/option{i+3}_{file_prefix}.jpg")
+            upload_image_to_s3(bottom_right, f"{output_folder}/option{i+4}_{file_prefix}.jpg")
             # top_left.save(
             #     os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
             # )
