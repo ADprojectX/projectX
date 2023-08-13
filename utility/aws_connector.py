@@ -86,7 +86,6 @@ def cdn_path(path):
         # provided using a canned policy.
         signed_url = cloudfront_signer.generate_presigned_url(
             url, date_less_than=expire_date)
-        print(signed_url)
         return signed_url
     except Exception as e:
         print(f"An error occurred: {e}")

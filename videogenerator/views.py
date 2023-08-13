@@ -129,7 +129,7 @@ def get_video_files(request):
         scene_lists = script.current_scenes
         asset_urls = []
 
-        for scene in scene_lists:
+        for i, scene in enumerate(scene_lists):
             try:
                 scene_obj = Scene.objects.get(id=scene)
                 project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
@@ -137,18 +137,41 @@ def get_video_files(request):
 
                 if intermediate_video:
                     cloudfront_url = cdn_path(intermediate_video)
-                    asset_urls.append(cloudfront_url)
+                    asset_urls.append([i, scene, cloudfront_url])
                 else:
-                    asset_urls.append(None)
+                    asset_urls.append([i, scene, cloudfront_url])
             except ObjectDoesNotExist:
                 asset_urls.append(None)
-        for asset in asset_urls:
-            # [1, sceneid, url]
-            print(asset)
         return Response({'asset_urls': asset_urls})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 #geturlfromsceneID
+
+@api_view(['GET'])
+def update_url(request):
+    try:
+        scene_id = request.query_params.get('sceneid')
+        category = request.query_params.get('category')
+
+        if scene_id and category:
+            scene_obj = Scene.objects.get(id=scene_id)
+            project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+            asset = project_asset.get(category)
+
+            if asset:
+                cloudfront_url = cdn_path(asset)
+                return Response({'cloudfront_url': cloudfront_url})
+            else:
+                return Response({'error': 'Asset not found'}, status=404)
+        else:
+            return Response({'error': 'Missing parameters'}, status=400)
+    except Scene.DoesNotExist:
+        return Response({'error': 'Scene not found'}, status=404)
+    except ProjectAssets.DoesNotExist:
+        return Response({'error': 'Project assets not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
 @api_view(["GET"])
 def voice_samples(request):
     voice_samples = get_voice_samples()  # Assuming you have the logic to populate the voice_samples dictionary
