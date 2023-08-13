@@ -93,7 +93,7 @@ class ProjectAssets(models.Model):
             self.currently_used_asset = {}
         for k, v in kwargs.items():
             self.asset_path.setdefault(k, []).append(v)
-            self.currently_used_asset.setdefault(k, []).append(v)
+            self.currently_used_asset[k] = v
         self.save()
 
 class PendingTask(models.Model):

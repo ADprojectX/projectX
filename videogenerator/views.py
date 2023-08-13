@@ -2,20 +2,22 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Request, Script, ProjectAssets, Scene
-from django.contrib.auth import get_user_model
-from django.views.decorators.csrf import csrf_exempt
+from utility.aws_connector import cdn_path
+from django.core.exceptions import ObjectDoesNotExist
+# from django.contrib.auth import get_user_model
+# from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 import jwt
 from accounts.models import User
 import os
 import base64
-import zipfile
+# import zipfile
 import json
 from utility.backendProcessInterface import process_scenes, process_image_desc, path_to_request, generate_initial_assets, get_current_images
 from utility.text_to_audio import get_voice_samples
-from django.http import StreamingHttpResponse
-from django.http import HttpResponse
-from wsgiref.util import FileWrapper
+# from django.http import StreamingHttpResponse
+# from django.http import HttpResponse
+# from wsgiref.util import FileWrapper
 
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
@@ -119,33 +121,34 @@ def save_script(request):
 
 @api_view(['GET'])
 def get_video_files(request):
-    # Assuming your video files are stored in a specific directory
-    video_directory = os.path.join(os.getcwd(), 'OBJECT_STORE', '12', '54', 'output')
+    try:
+        req_id = request.query_params.get('reqid')
+        print(req_id, 'hid')
+        req = Request.objects.get(id=req_id)
+        script = Script.objects.get(request=req)
+        scene_lists = script.current_scenes
+        asset_urls = []
 
-    # Get the list of video file names
-    video_files = os.listdir(video_directory)
+        for scene in scene_lists:
+            try:
+                scene_obj = Scene.objects.get(id=scene)
+                project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+                intermediate_video = project_asset.get('intermediate_video')
 
-    # Create a temporary zip file
-    temp_zip_path = os.path.join(video_directory, 'temp.zip')
-
-    # Iterate through the video files and add them to the zip file
-    with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
-        for file_name in video_files:
-            file_path = os.path.join(video_directory, file_name)
-            zip_file.write(file_path, arcname=file_name)
-
-    # Open the zip file in binary mode and create a file wrapper
-    file_wrapper = FileWrapper(open(temp_zip_path, 'rb'))
-
-    # Create a response with the file wrapper as the content
-    response = HttpResponse(file_wrapper, content_type='application/octet-stream')
-    response['Content-Disposition'] = 'attachment; filename="video_files.zip"'
-
-    # Delete the temporary zip file
-    os.remove(temp_zip_path)
-
-    return response
-
+                if intermediate_video:
+                    cloudfront_url = cdn_path(intermediate_video)
+                    asset_urls.append(cloudfront_url)
+                else:
+                    asset_urls.append(None)
+            except ObjectDoesNotExist:
+                asset_urls.append(None)
+        for asset in asset_urls:
+            # [1, sceneid, url]
+            print(asset)
+        return Response({'asset_urls': asset_urls})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+#geturlfromsceneID
 @api_view(["GET"])
 def voice_samples(request):
     voice_samples = get_voice_samples()  # Assuming you have the logic to populate the voice_samples dictionary
@@ -157,18 +160,19 @@ def voice_samples(request):
     return Response(serialized_voice_samples)
 
 @api_view(["GET"])
+def get_user_projects(request):
+    jwt_token = request.COOKIES.get('jwt')
+    user = user_authorization(jwt_token)
+    user_requests = Request.objects.filter(user=user).values()
+    return Response(user_requests)
+
+@api_view(["GET"])
 def get_thumbnail_images(request):
     # req_id = request.query_params.get('reqid')
     req = Request.objects.get(id=77)
     img_asset = ProjectAssets.objects.get(request=req)
     return Response()
 
-@api_view(["GET"])
-def get_user_projects(request):
-    jwt_token = request.COOKIES.get('jwt')
-    user = user_authorization(jwt_token)
-    user_requests = Request.objects.filter(user=user).values()
-    return Response(user_requests)
 
 # @api_view(["GET"])
 # def set_voice(request):
@@ -213,3 +217,28 @@ def get_user_projects(request):
 #         return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
 #     except Script.DoesNotExist:
 #         return Response({'error': 'Script not found'}, status=status.HTTP_404_NOT_FOUND)
+
+# # Assuming your video files are stored in a specific directory
+#     video_directory = os.path.join(os.getcwd(), 'OBJECT_STORE', '12', '54', 'output')
+#     # video_directory = 
+#     # Get the list of video file names
+#     video_files = os.listdir(video_directory)
+
+#     # Create a temporary zip file
+#     temp_zip_path = os.path.join(video_directory, 'temp.zip')
+
+#     # Iterate through the video files and add them to the zip file
+#     with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
+#         for file_name in video_files:
+#             file_path = os.path.join(video_directory, file_name)
+#             zip_file.write(file_path, arcname=file_name)
+
+#     # Open the zip file in binary mode and create a file wrapper
+#     file_wrapper = FileWrapper(open(temp_zip_path, 'rb'))
+
+#     # Create a response with the file wrapper as the content
+#     response = HttpResponse(file_wrapper, content_type='application/octet-stream')
+#     response['Content-Disposition'] = 'attachment; filename="video_files.zip"'
+
+#     # Delete the temporary zip file
+#     os.remove(temp_zip_path)

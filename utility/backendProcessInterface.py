@@ -74,7 +74,7 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
         voice_file = audio_folder + f"/{scene_id}/{request.voice}/0.mp3"
-        im_video_file = im_video_folder + f"/{scene_id}/{img_service}_{request.voice}.mp4"
+        im_video_file = im_video_folder + f"/{scene_id}/option1_{request.voice}.mp4"
         
         # print(image_file, voice_file)
         asset.add_new_asset(image = image_file, audio = voice_file, intermediate_video = im_video_file)
