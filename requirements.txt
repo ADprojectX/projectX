@@ -39,7 +39,7 @@ executing==1.2.0
 flower==2.0.0
 frozenlist==1.4.0
 future==0.18.3
-gcloud==0.17.0
+gcloud==0.18.3
 googleapis-common-protos==1.60.0
 httplib2==0.22.0
 humanize==4.7.0
@@ -59,7 +59,7 @@ moviepy==1.0.3
 multidict==6.0.4
 nose==1.3.7
 numpy==1.25.1
-oauth2client==3.0.0
+oauth2client==4.1.3
 openai==0.27.8
 parso==0.8.3
 pexpect==4.8.0
@@ -74,7 +74,7 @@ pure-eval==0.2.2
 pyasn1==0.5.0
 pyasn1-modules==0.3.0
 pycparser==2.21
-pycryptodome==3.4.3
+pycryptodome==3.18.0
 pydantic==1.10.11
 pydub==0.25.1
 Pygments==2.15.1
@@ -82,15 +82,15 @@ PyJWT==2.8.0
 pymongo==3.12.3
 PyMySQL==1.1.0
 pyparsing==3.1.1
-Pyrebase==3.0.27
+Pyrebase4==4.7.1
 pyserial==3.5
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 python-jwt==2.0.1
 pytz==2023.3
 redis==4.6.0
-requests==2.11.1
-requests-toolbelt==0.7.0
+requests==2.29.0
+requests-toolbelt==0.10.1
 rsa==4.9
 s3transfer==0.6.1
 six==1.16.0

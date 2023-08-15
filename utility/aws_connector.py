@@ -20,15 +20,7 @@ AWS_CLOUDFRONT_KEY = settings.AWS_CLOUDFRONT_KEY #os.getenv("AWS_CLOUDFRONT_KEY"
 
 s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
 
-def count_files_in_s3_folder(folder_path):
-    # Initialize the S3 client
-    # List objects in the specified folder
-    objects = s3.list_objects_v2(Bucket=AWS_BUCKET, Prefix=folder_path)
-    
-    # Count the number of files
-    file_count = len(objects.get('Contents', []))
-     
-    return file_count
+
 
 def check_file_exists(image_key):
     try:

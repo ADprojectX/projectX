@@ -9,8 +9,10 @@ import database as db
 import boto3
 from botocore.exceptions import NoCredentialsError
 import tempfile
-from aws_connector import count_files_in_s3_folder
-from django.conf import settings
+# from aws_connector import count_files_in_s3_folder
+# from django.conf import settings
+# import sys
+# sys.path.append(os.getcwd())
 # from text_to_image import pending_tasks
 
 
@@ -20,9 +22,20 @@ CHANNEL_ID = os.getenv("CHANNEL_ID")
 discord_token = os.getenv("DISCORD_BOT_TOKEN")
 client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
-ACCESS_KEY_ID = settings.AWS_ACCESS_KEY_ID #os.getenv('AWS_ACCESS_KEY_ID')
-SECRET_ACCESS_KEY = settings.AWS_SECRET_ACCESS_KEY #os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_BUCKET = settings.AWS_STORAGE_BUCKET_NAME #os.getenv('AWS_STORAGE_BUCKET_NAME')
+ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_BUCKET = os.getenv('AWS_STORAGE_BUCKET_NAME')
+
+s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
+def count_files_in_s3_folder(folder_path):
+    # Initialize the S3 client
+    # List objects in the specified folder
+    objects = s3.list_objects_v2(Bucket=AWS_BUCKET, Prefix=folder_path)
+    
+    # Count the number of files
+    file_count = len(objects.get('Contents', []))
+     
+    return file_count
 
 def upload_image_to_s3(image, file_name):
     s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
