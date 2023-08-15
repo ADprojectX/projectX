@@ -4,7 +4,7 @@ from utility.sender import Sender
 from utility.script import temp_script
 from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
-import time
+import uuid
 from videogenerator.serializers import RequestSerializer, ProjectAssetsSerializer
 from videogenerator.models import ProjectAssets, Scene
 from utility.tasks import sent_image_request, sent_audio_request, captionated_video
@@ -70,11 +70,11 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
     for scene_id in script:
         scene = Scene.objects.get(id = scene_id)
         asset, _ = ProjectAssets.objects.update_or_create(scene_id=scene)
-        image_file = image_folder + f"/{scene_id}"#/{scene.image_desc.replace(' ', '_').lower()}.jpg"
+        image_file = image_folder + f"/{scene_id}/{str(uuid.uuid4())}"#/{scene.image_desc.replace(' ', '_').lower()}.jpg"
         # audio_file = audio_folder + f"/{v[0].repl}"
         # formatted_voice = f"{voice_folder}/{k}" #VOICE_KEY.format(k)
         voice_file = audio_folder + f"/{scene_id}/{request.voice}/0.mp3"
-        im_video_file = im_video_folder + f"/{scene_id}/option1_{request.voice}.mp4"
+        im_video_file = im_video_folder + f"/{scene_id}/{img_service}_{request.voice}.mp4"
         
         # print(image_file, voice_file)
         asset.add_new_asset(image = image_file, audio = voice_file, intermediate_video = im_video_file)
@@ -82,7 +82,7 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
         # # add celery chain
         sent_image_request.delay(image_file, sender_json, scene.image_desc, request.id)
         sent_audio_request.delay(voice_file, scene.narration, request.voice if request.voice else 'Adam')
-        captionated_video.delay({"image":image_file+f"/option1_{scene.image_desc.replace(' ', '_').lower()}.jpg", "audio":voice_file}, scene.narration, im_video_file)
+        captionated_video.delay({"image":image_file+f"_option1.jpg", "audio":voice_file}, scene.narration, im_video_file)
     # serializer = ProjectAssetsSerializer(instance=asset)
     # serialized_data = serializer.data
 

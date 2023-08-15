@@ -10,23 +10,74 @@ from rest_framework.exceptions import AuthenticationFailed
 import uuid
 from django.utils import timezone
 from django.middleware import csrf
-from rest_framework_simplejwt.authentication import JWTAuthentication
+import pyrebase
+import os
+# with open(f"{os.getcwd()}/firebase-projectX.json", 'r') as json_file:
+#     cred = json.load(json_file)
+# // Your web app's Firebase configuration
+firebaseConfig = {
+"apiKey": "AIzaSyAAiQ_KMPP8QTiCLVN87FoCAkSv2eIPHTo",
+"authDomain": "projectx-392305.firebaseapp.com",
+"databaseURL": "https://projectx-392305-default-rtdb.firebaseio.com",
+"projectId": "projectx-392305",
+"storageBucket": "projectx-392305.appspot.com",
+"messagingSenderId": "745908786386",
+"appId": "1:745908786386:web:389226871c33d8a766c90b",
+"serviceAccount": f"{os.getcwd()}/firebase-projectX.json"
+}
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+auth = firebase.auth()
 
 @api_view(['POST'])
 def signup_user(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
-        print(serializer)
-        # Get the password from the serializer data
-        password = serializer.validated_data.pop('password')
-        # Hash the password
-        hashed_password = make_password(password)
-        # Create the user with the hashed password
-        user = User.objects.create(password=hashed_password, **serializer.validated_data)
-        user.save()
-        return Response({'id': user.id}, status=status.HTTP_201_CREATED)
+        try:
+            # Get the password from the serializer data
+            password = serializer.validated_data.pop('password')
+            firebase_user = auth.create_user_with_email_and_password(serializer.validated_data['email'], password)
+            auth.send_email_verification(firebase_user['idToken'])
+            # Hash the password
+            hashed_password = make_password(password)
+            # Create the user with the hashed password
+            user = User.objects.create(password=hashed_password, **serializer.validated_data)
+            user.save()
+            return Response({'id': user.id}, status=status.HTTP_201_CREATED)
+        except:
+            return Response({'error': 'Email already exists'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def login_user(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        try:
+            firebase_user = auth.sign_in_with_email_and_password(
+                serializer.validated_data['email'], 
+                serializer.validated_data['password']
+            )
+            
+            # Firebase authentication successful, you can use the ID token
+            id_token = firebase_user['idToken']
+            
+            # Get the user details from the Firebase user if needed
+            user_info = auth.get_account_info(id_token)
+            # user_info will contain information about the user, including email, user ID, etc.
+            
+            response = Response()
+            csrf_token = csrf.get_token(request)
+            response['Access-Control-Allow-Origin'] = ['http://localhost:3000', "http://172.24.31.46:3000"]
+            response['X-CSRFToken'] = csrf_token
+            response['Authorization'] = f'Bearer {id_token}'
+            
+            return response
+        except Exception as e:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # @csrf_exempt
 @api_view(['POST'])
@@ -107,3 +158,4 @@ def check_active(request):
         return Response({'email': email}, status=status.HTTP_200_OK)
     else:
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+

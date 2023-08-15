@@ -118,10 +118,10 @@ async def download_image(url, filename, prompt):
             top_left, top_right, bottom_left, bottom_right = split_image(input_file)
             # Save the output images with dynamic names in the output folder
             i = count_files_in_s3_folder(output_folder)
-            upload_image_to_s3(top_left, f"{output_folder}/option{i+1}_{file_prefix}.jpg")
-            upload_image_to_s3(top_right, f"{output_folder}/option{i+2}_{file_prefix}.jpg")
-            upload_image_to_s3(bottom_left, f"{output_folder}/option{i+3}_{file_prefix}.jpg")
-            upload_image_to_s3(bottom_right, f"{output_folder}/option{i+4}_{file_prefix}.jpg")
+            upload_image_to_s3(top_left, f"{output_folder}_option{i+1}.jpg")
+            upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
+            upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
+            upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
             # top_left.save(
             #     os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
             # )
