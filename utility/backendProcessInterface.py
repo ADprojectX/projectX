@@ -77,7 +77,7 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
         im_video_file = im_video_folder + f"/{scene_id}/{img_service}_{request.voice}.mp4"
         
         # print(image_file, voice_file)
-        asset.add_new_asset(image = image_file, audio = voice_file, intermediate_video = im_video_file)
+        asset.add_new_asset(image = image_file+f"_option1.jpg", audio = voice_file, intermediate_video = im_video_file)
         # # asset_list.append([image_file, voice_file])
         # # add celery chain
         sent_image_request.delay(image_file, sender_json, scene.image_desc, request.id)
