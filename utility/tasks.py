@@ -90,7 +90,7 @@ def captionated_video(assets, narration, imv_path):
         #         continue
         #     video = get_file_from_s3(v)
     
-@shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
+@shared_task(name='download_project', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
 def generate_final_project(assets, video_folder):
     clips = []
     for url in assets:
