@@ -1,6 +1,7 @@
 # import os
 # from dotenv import load_dotenv
 import boto3
+from time import sleep
 from botocore.exceptions import ClientError, NoCredentialsError
 from io import BytesIO
 from django.conf import settings
@@ -44,12 +45,24 @@ def get_file_from_s3(file_key):
         print(f"An error occurred: {e}")
         return None
 
+def file_exists_in_s3(file_name):
+    """
+    Check if file exists in the specified S3 bucket.
+    """
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(AWS_BUCKET)
+    
+    objs = list(bucket.objects.filter(Prefix=file_name))
+    return any([w.key == file_name for w in objs])
+
 def upload_file_to_s3(file_data, file_name):
     try:
         # Create a file-like object from the file data
         file_obj = BytesIO(file_data)
         # Upload the file-like object to S3
-        s3.upload_fileobj(file_obj, AWS_BUCKET, file_name)
+        while not file_exists_in_s3(file_name):
+            s3.upload_fileobj(file_obj, AWS_BUCKET, file_name)
+            sleep(10)
         print("Upload Successful")
         return True
     except NoCredentialsError:
@@ -71,7 +84,7 @@ def cdn_path(path):
     try:
         url = f'https://{AWS_CLOUDFRONT_DOMAIN}/{path}' #-- Distribution domain name
         current_time = datetime.datetime.utcnow()
-        expire_date = current_time + datetime.timedelta(seconds=3600)
+        expire_date = current_time + datetime.timedelta(seconds=432000)
         cloudfront_signer = CloudFrontSigner(AWS_CLOUDFRONT_KEY_ID, rsa_signer)
 
         # Create a signed url that will be valid until the specific expiry date
