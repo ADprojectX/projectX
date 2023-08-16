@@ -13,7 +13,7 @@ import os
 import base64
 # import zipfile
 import json
-from utility.backendProcessInterface import process_scenes, process_image_desc, path_to_request, generate_initial_assets, get_current_images
+from utility.backendProcessInterface import process_scenes, process_image_desc, path_to_request, generate_initial_assets, generate_final_video
 from utility.text_to_audio import get_voice_samples
 # from django.http import StreamingHttpResponse
 # from django.http import HttpResponse
@@ -121,13 +121,23 @@ def save_script(request):
     else:
         return Response({'error': 'finalScene or reqid parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-
+@api_view(["GET"])    
+def download_project(request):
+    try:
+        req_id = request.query_params.get('reqid')
+        req = Request.objects.get(id=req_id)
+        script = Script.objects.get(request=req)
+        request_path = path_to_request(req)
+        cdn_url = generate_final_video(script.current_scenes, request_path)
+        return Response({'final_video': cdn_url})
+    except Exception as e:
+        pass
+#geturlfromsceneID
 
 @api_view(['GET'])
 def get_video_files(request):
     try:
         req_id = request.query_params.get('reqid')
-        print(req_id, 'hid')
         req = Request.objects.get(id=req_id)
         script = Script.objects.get(request=req)
         scene_lists = script.current_scenes
@@ -149,7 +159,7 @@ def get_video_files(request):
         return Response({'asset_urls': asset_urls})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-#geturlfromsceneID
+
 
 @api_view(['GET'])
 def update_url(request):

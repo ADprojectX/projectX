@@ -95,21 +95,3 @@ def cdn_path(path):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
-
-        # # Encrypt the path using the private key
-        # private_key = serialization.load_pem_private_key(
-        #     AWS_CLOUDFRONT_KEY,
-        #     password=None  # Change this if your private key is password-protected
-        # )
-        # encrypted_path = private_key.sign(
-        #     path.encode("utf-8"),
-        #     padding.PKCS1v15(),
-        #     hashes.SHA256()
-        # )
-        
-        # # Convert the encrypted path to a hexadecimal string
-        # encrypted_path_hex = encrypted_path.hex()
-        
-        # # Generate the CloudFront URL with the encrypted path and key ID as query parameters
-        # cloudfront_url = f"{AWS_CLOUDFRONT_DOMAIN}?path={encrypted_path_hex}&key_id={AWS_CLOUDFRONT_KEY_ID}"
-        

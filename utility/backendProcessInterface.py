@@ -7,7 +7,8 @@ from utility.script import img_desc
 import uuid
 from videogenerator.serializers import RequestSerializer, ProjectAssetsSerializer
 from videogenerator.models import ProjectAssets, Scene
-from utility.tasks import sent_image_request, sent_audio_request, captionated_video
+from utility.tasks import sent_image_request, sent_audio_request, captionated_video, generate_final_project
+from utility.aws_connector import cdn_path
 
 
 # The number of simultaneous requests allowed by the buffer
@@ -86,6 +87,13 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
     # serializer = ProjectAssetsSerializer(instance=asset)
     # serialized_data = serializer.data
 
-def get_current_images(request):
-    pass
+def generate_final_videos(script, request_path):
+    video_assets = []
+    for scene_id in script:
+        scene_obj = Scene.objects.get(id=scene_id)
+        project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+        intermediate_video = project_asset.get('intermediate_video')
+        video_assets.append(intermediate_video)
+    generate_final_project.delay(video_assets, request_path+"/final_video")
+    return cdn_path(request_path+"/final_video")
 

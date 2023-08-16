@@ -1,3 +1,4 @@
+from moviepy.editor import VideoFileClip, concatenate_videoclips
 from celery import shared_task, current_task
 from celery.utils.log import get_task_logger
 from elevenlabs.api.error import APIError
@@ -89,7 +90,13 @@ def captionated_video(assets, narration, imv_path):
         #         continue
         #     video = get_file_from_s3(v)
     
-    
-    
-        
-        
+@shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
+def generate_final_project(assets, video_folder):
+    clips = []
+    for url in assets:
+        file_data = get_file_from_s3(url)
+        if file_data:
+            clips.append(VideoFileClip(BytesIO(file_data)))
+    if clips:
+        final_clip = concatenate_videoclips(clips)
+        upload_file_to_s3(final_clip, video_folder)
