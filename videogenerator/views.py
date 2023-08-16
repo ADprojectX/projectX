@@ -124,11 +124,14 @@ def save_script(request):
 @api_view(["GET"])    
 def download_project(request):
     try:
+        # changes = request.query_params.get('changes')
         req_id = request.query_params.get('reqid')
         req = Request.objects.get(id=req_id)
+        if req.final_video_asset:
+            return Response({'final_video': cdn_path(req.final_video_asset)})
         script = Script.objects.get(request=req)
         request_path = path_to_request(req)
-        cdn_url = generate_final_video(script.current_scenes, request_path)
+        cdn_url = generate_final_video(script.current_scenes, request_path, req)
         return Response({'final_video': cdn_url})
     except Exception as e:
         pass

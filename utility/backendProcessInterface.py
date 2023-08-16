@@ -87,13 +87,16 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
     # serializer = ProjectAssetsSerializer(instance=asset)
     # serialized_data = serializer.data
 
-def generate_final_videos(script, request_path):
+def generate_final_video(script, request_path, req):
     video_assets = []
     for scene_id in script:
         scene_obj = Scene.objects.get(id=scene_id)
         project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
         intermediate_video = project_asset.get('intermediate_video')
         video_assets.append(intermediate_video)
-    generate_final_project.delay(video_assets, request_path+"/final_video")
-    return cdn_path(request_path+"/final_video")
+    project_path = request_path+f"/final_video/{req.id}.mp4"
+    req.final_video_asset = project_path
+    req.save()
+    generate_final_project.delay(video_assets, project_path)
+    return cdn_path(project_path)
 

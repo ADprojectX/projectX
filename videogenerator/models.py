@@ -13,6 +13,7 @@ class Request(models.Model):
     topic = models.CharField(max_length=200)
     voice = models.CharField(max_length=200, null=True)
     created = models.DateTimeField(auto_now_add=True)
+    final_video_asset = models.CharField(max_length=500, null=True)
 
     def __str__(self):
         return f'{self.user.username} - {self.topic}'
@@ -27,6 +28,8 @@ class Script(models.Model):
         unique_together = ['request']
 
     def add_entire_script(self, script_list):
+        self.request.final_video_asset = None
+        self.request.save()
         if "script_scenes" not in self.__dict__ or self.script_scenes is None:
             self.script_scenes = []
 
@@ -84,6 +87,8 @@ class ProjectAssets(models.Model):
     currently_used_asset = models.JSONField(null=True)
 
     def add_new_asset(self, **kwargs):
+        self.scene_id.script.request.final_video_asset = None
+        self.scene_id.script.request.save() 
         if self.asset_path is None:
             self.asset_path = {}
         if self.currently_used_asset is None:

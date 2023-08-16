@@ -84,7 +84,7 @@ def cdn_path(path):
     try:
         url = f'https://{AWS_CLOUDFRONT_DOMAIN}/{path}' #-- Distribution domain name
         current_time = datetime.datetime.utcnow()
-        expire_date = current_time + datetime.timedelta(seconds=60)
+        expire_date = current_time + datetime.timedelta(seconds=3600)
         cloudfront_signer = CloudFrontSigner(AWS_CLOUDFRONT_KEY_ID, rsa_signer)
 
         # Create a signed url that will be valid until the specific expiry date
