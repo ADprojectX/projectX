@@ -22,30 +22,34 @@ from utility.text_to_audio import get_voice_samples
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
-def user_authorization(jwt_token):
-    try:
-        payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
-        user_id = payload.get('id')
-        user = User.objects.get(id=user_id)
-        if not user.is_authenticated:
-            return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-        return user
-    except jwt.exceptions.InvalidTokenError:
-        return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
-    except User.DoesNotExist:
-        return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+# def user_authorization(jwt_token):
+#     try:
+#         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
+#         user_id = payload.get('id')
+#         user = User.objects.get(id=user_id)
+#         if not user.is_authenticated:
+#             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+#         return user
+#     except jwt.exceptions.InvalidTokenError:
+#         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
+#     except User.DoesNotExist:
+#         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 def create_request(request):
-    jwt_token = request.COOKIES.get('jwt')
-    # if not jwt_token:
-    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
-    user = user_authorization(jwt_token)
-    if user is None:
-        return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
+    # jwt_token = request.COOKIES.get('jwt')
+    # # if not jwt_token:
+    # #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+    # user = user_authorization(jwt_token)
+    # if user is None:
+    #     return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
 
+    print(request.data)
+    fireid = request.data.get('fireid')
+    user = User.objects.get(fireid=fireid)
     topic = request.data.get('topic')
     req = Request.objects.create(user=user, topic=topic)
+    
 
     # Process the request and generate the script as a dictionary
     script_dict = process_scenes(request)
@@ -184,8 +188,11 @@ def voice_samples(request):
 
 @api_view(["GET"])
 def get_user_projects(request):
-    jwt_token = request.COOKIES.get('jwt')
-    user = user_authorization(jwt_token)
+    # jwt_token = request.COOKIES.get('jwt')
+    # user = user_authorization(jwt_token)
+    fireid = request.query_params.get('fireid')
+    user = User.objects.get(fireid=fireid)
+    
     user_requests = Request.objects.filter(user=user).values()
     return Response(user_requests)
 
