@@ -191,10 +191,29 @@ def get_user_projects(request):
 
 @api_view(["GET"])
 def get_thumbnail_images(request):
-    # req_id = request.query_params.get('reqid')
-    req = Request.objects.get(id=77)
-    img_asset = ProjectAssets.objects.get(request=req)
-    return Response()
+    try:
+        req_id = request.query_params.get('reqid')
+        req = Request.objects.get(id=req_id)
+        script = Script.objects.get(request=req)
+        scene_lists = script.current_scenes
+        asset_urls = []
+        for i, scene in enumerate(scene_lists):
+            try:
+                scene_obj = Scene.objects.get(id=scene)
+                project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+                image = project_asset.get('image')
+
+                if image:
+                    cloudfront_url = cdn_path(image)
+                    asset_urls.append([i, scene, cloudfront_url])
+                else:
+                    asset_urls.append([i, scene, cloudfront_url])
+            except ObjectDoesNotExist:
+                asset_urls.append(None)
+        return Response({'asset_urls': asset_urls})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    
 
 
 # @api_view(["GET"])
