@@ -65,13 +65,9 @@ def captionated_video(assets, narration, imv_path):
     for k,v in assets.items():
         if k == 'audio':
             while not check_file_exists(v):
-                print('here')
-                print(v)
                 continue
             audio = get_file_from_s3(v)
         if k == 'image':
-            print('here')
-            print(v)
             while not check_file_exists(v):
                 continue
             image = get_file_from_s3(v)
@@ -94,6 +90,8 @@ def captionated_video(assets, narration, imv_path):
 def generate_final_project(assets, video_folder):
     clips = []
     for url in assets:
+        while not check_file_exists(url):
+            continue
         file_data = get_file_from_s3(url)
         if file_data:
             clips.append(VideoFileClip(BytesIO(file_data)))
