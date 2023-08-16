@@ -35,6 +35,13 @@ def sent_image_request(image_folder, sender_json, prompt, request_id):
 
         # Perform the actual image processing only when PendingTask attempt above is successful and return the result
         convert_to_image(sender, prompt)
+        i = 0
+        while PendingTask.objects.filter(request=request, prompt=prompt, folder=image_folder).exists():
+            i+=1
+            if i%4==0:
+                i=0
+                convert_to_image(sender, prompt)
+            sleep(300)
     except Exception as e:
         # Log the exception and retry the task if it's a retryable error
         logger.error(f"Error processing the request: {e}")

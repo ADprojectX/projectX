@@ -21,3 +21,4 @@ lib/
 man/
 reference/
 firebase-projectx.json
+videogenerator/migrations/0001_initial.py
