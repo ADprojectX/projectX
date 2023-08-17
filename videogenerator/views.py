@@ -93,7 +93,9 @@ def save_script(request):
             req.save()
             # Deserialize the final_scene JSON string to a Python object
             script_dict = json.loads(final_scene)
-            # print(script_dict)
+            print("SCRIPTDICT")
+            print(script_dict)
+            print(type(script_dict))
             # Check if a Script object exists for the Request
             script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
@@ -124,6 +126,9 @@ def download_project(request):
         req_id = request.query_params.get('reqid')
         req = Request.objects.get(id=req_id)
         if req.final_video_asset:
+            print('fuck')
+            print(req.final_video_asset)
+            print('fuck2')
             return Response({'final_video': cdn_path(req.final_video_asset)})
         script = Script.objects.get(request=req)
         request_path = path_to_request(req)

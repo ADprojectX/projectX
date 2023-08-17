@@ -9,6 +9,7 @@ from utility.create_video import create_vid
 from utility.generate_caption import generate_captions
 from videogenerator.models import PendingTask
 import re
+import os
 import json
 from videogenerator.models import Request
 from time import sleep
@@ -94,7 +95,29 @@ def generate_final_project(assets, video_folder):
             continue
         file_data = get_file_from_s3(url)
         if file_data:
-            clips.append(VideoFileClip(BytesIO(file_data)))
+            # Save to a temporary file
+            temp_file = NamedTemporaryFile(delete=False, suffix='.mp4')
+            temp_file.write(file_data)
+            temp_file.close()
+
+            clips.append(VideoFileClip(temp_file.name))
+
+            # After processing, remove the temporary file
+            os.remove(temp_file.name)
+
     if clips:
         final_clip = concatenate_videoclips(clips)
-        upload_file_to_s3(final_clip, video_folder)
+
+        # Save the final_clip to a temporary file
+        output_temp_file = NamedTemporaryFile(delete=False, suffix='.mp4')
+        final_clip.write_videofile(output_temp_file.name)
+
+        # Read the final_clip from the temporary file
+        with open(output_temp_file.name, 'rb') as f:
+            final_clip_data = f.read()
+
+        # Upload to S3
+        upload_file_to_s3(final_clip_data, video_folder)
+
+        # Remove the temporary output file
+        os.remove(output_temp_file.name)

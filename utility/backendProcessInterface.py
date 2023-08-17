@@ -17,31 +17,31 @@ IMAGE_BUFFER_SIZE = 13
 
 def process_scenes(request):
     topic = request.data.get('topic')
-    # processed_topic = tp.process_input(topic)  # request str process(text)
-    # script_response = osr.request_script(processed_topic) #openai request for script
-    scene_dic = tp.script_processing(temp_script)  # dictionary generating for narration and img desc
+    processed_topic = tp.process_input(topic)  # request str process(text)
+    script_response = osr.request_script(processed_topic) #openai request for script
+    scene_dic = tp.script_processing(script_response)#(temp_script)  # dictionary generating for narration and img desc
     return scene_dic
 
 def process_image_desc(script):
 
     ######################temporary#################################
-    # Split the string based on new lines
-    img_desc_list = img_desc.split('\n')
-    # Remove the "Image Description: " prefix from each string
-    img_desc_list = [desc.replace('Image Description: ', '') for desc in img_desc_list]
-    for i, uuid, scene in script:
+    # # Split the string based on new lines
+    # img_desc_list = img_desc.split('\n')
+    # # Remove the "Image Description: " prefix from each string
+    # img_desc_list = [desc.replace('Image Description: ', '') for desc in img_desc_list]
+    # for i, uuid, scene in script:
 
-        # i = int(i)
-        # script[int(i)] = int(i)
-        script[i].append(img_desc_list[i])
+    #     # i = int(i)
+    #     # script[int(i)] = int(i)
+    #     script[i].append(img_desc_list[i])
         
-        # if len(script[i])<4:
-        # else:
-        #     script[i][3]=img_desc_list[i]
+    #     # if len(script[i])<4:
+    #     # else:
+    #     #     script[i][3]=img_desc_list[i]
     ######################temporary#################################
     
-    # for scene,narration in script.items():
-    #     script[scene].append(osr.request_image_descriptions(narration[0]))
+    for index, scene, narration in script:
+        script[index].append(osr.request_image_descriptions(narration))
     return script
     
 def path_to_request(request):

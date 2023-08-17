@@ -1,9 +1,20 @@
 import openai
 import os
+import re
 from dotenv import load_dotenv
-
 dotenv_path = os.path.join(os.getcwd(), ".env")
 load_dotenv(dotenv_path)
+openai.api_key = os.getenv('OPENAI_SECRET_KEY')
+openai.organization = "org-M7njFxmHRMFtHSA59Oli6QGm"
+
+
+def extract_narration(text):
+    # The pattern looks for 'Narrator:' followed by any character (.) zero or more times (?)
+    # until a double-quote is found. The non-greedy modifier '?' ensures we capture the shortest match.
+    pattern = r'Narrator: ".*?"'
+    
+    matches = re.findall(pattern, text)
+    return '\n\n'.join(matches)
 
 
 def request_script(text):
@@ -11,18 +22,26 @@ def request_script(text):
         model="gpt-3.5-turbo",
         messages=[
             {
-                "role": "system",
-                "content": "You will act as a youtube expert who will generate a script perfectly for the topic given",
+                "role": "user",
+                "content": f"""I am providing you the title of the video: "{text}". I want you to create a video script in the format I provide below. The script should be divided into narration speech which will be spoken in the video. Below is the format where each narration should start with "Narrator:" and then the actual speech to be spoken in the video. In the below format it is represented by double quotes. Make sure there is nothing else in the output. There should strictly be only narration speech no image description text or anything else in the output. also do not reply with any other text such as 
+                    I'd be happy to help you create the video script. Here it is following the format you provided:, etc etc etc
+                    The output should only strictly contain narrator scripts in the specified format.
+
+                    Narrator: "Narration speech 1"
+                    Narrator: "Narration speech 2"
+                    Narrator: "Narration speech 3"
+                    """
             },
-            {"role": "user", "content": text},
         ],
-        max_tokens=100,
+        max_tokens=3500,
     )
 
     answer = response["choices"][0]["message"]["content"]
 
-    print(f"The script for given topic is \n \n '{answer}'.")
-    return answer
+    refined_answer = extract_narration(answer)
+
+    print(f"The script for given topic is \n \n '{refined_answer}'.")
+    return refined_answer
 
 def request_image_descriptions(narration):
     prompt= f"""

@@ -113,12 +113,12 @@ class ProjectAssets(models.Model):
 
 class PendingTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    prompt = models.CharField(max_length=255, null=True)  # Set a key length for the unique index
-    folder = models.CharField(max_length=255, null=True)  # Set a key length for the unique index
+    prompt = models.TextField(max_length=1000)  # Set a key length for the unique index
+    folder = models.CharField(max_length=255)  # Set a key length for the unique index
     request = models.ForeignKey(Request, on_delete=models.CASCADE, unique=False)
     class Meta:
         # Add a unique constraint for the combination of 'request', 'prompt', and 'folder'
-        unique_together = ('request', 'prompt', 'folder')
+        unique_together = ('request', 'folder')
 
     @classmethod
     def has_less_than_buffer_entries(cls):
