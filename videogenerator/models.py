@@ -47,9 +47,10 @@ class Script(models.Model):
                     defaults={
                         'narration': narration,
                         'image_desc': img_desc,
-                        'script': self
+                        'script': self.request.id
                     }
                 )
+            print(scene.script, 'hello')
             new_current_scenes.append(str(scene.id))
             if created:
                 # If the scene was created a new, add it to the relationships
@@ -76,7 +77,11 @@ class Scene(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     narration = models.TextField(null=True)
     image_desc = models.TextField(null=True)
-    script = models.OneToOneField(Script, on_delete=models.CASCADE, related_name='scenes')
+    script = models.UUIDField()
+    # script = models.OneToOneField(Script, on_delete=models.CASCADE, related_name='scenes')
+
+    def get_script_id(self):
+        return self.script
 
     def get_scene(self):
         return self.narration, self.image_desc
@@ -86,9 +91,14 @@ class ProjectAssets(models.Model):
     asset_path = models.JSONField(null=True)
     currently_used_asset = models.JSONField(null=True)
 
+    def get_scene_object(self):
+        return self.scene_id
+
     def add_new_asset(self, **kwargs):
-        self.scene_id.script.request.final_video_asset = None
-        self.scene_id.script.request.save() 
+        script = self.get_scene_object().get_script_id()
+        req = Request.objects.get(id=str(script))
+        req.final_video_asset = None
+        req.save()
         if self.asset_path is None:
             self.asset_path = {}
         if self.currently_used_asset is None:
