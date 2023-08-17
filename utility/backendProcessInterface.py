@@ -2,13 +2,12 @@ from utility import openai_request as osr, text_processing as tp, text_to_audio 
 import os
 from utility.sender import Sender
 from utility.script import temp_script
-from concurrent.futures import ThreadPoolExecutor, wait
 from utility.script import img_desc
 import uuid
-from videogenerator.serializers import RequestSerializer, ProjectAssetsSerializer
-from videogenerator.models import ProjectAssets, Scene
+from videogenerator.models import ProjectAssets, Scene, Request
 from utility.tasks import sent_image_request, sent_audio_request, captionated_video, generate_final_project
 from utility.aws_connector import cdn_path
+from rest_framework.response import Response
 
 
 # The number of simultaneous requests allowed by the buffer
@@ -100,3 +99,23 @@ def generate_final_video(script, request_path, req):
     generate_final_project.delay(video_assets, project_path)
     return cdn_path(project_path)
 
+def update_url_by_reqid(request):
+    reqid = request.query_params.get('reqid')
+    req = Request.objects.get(id=reqid)
+    asset = req.final_video_asset
+    cloudfront_url = cdn_path(asset)
+    return Response({'cloudfront_url': cloudfront_url})
+
+def update_url_by_sceneid_and_category(request):
+    scene_id = request.query_params.get('sceneid')
+    category = request.query_params.get('category')
+
+    scene_obj = Scene.objects.get(id=scene_id)
+    project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+    asset = project_asset.get(category)
+
+    if asset:
+        cloudfront_url = cdn_path(asset)
+        return Response({'cloudfront_url': cloudfront_url})
+    else:
+        return Response({'error': 'Asset not found'}, status=404)

@@ -20,7 +20,7 @@ import tempfile
 load_dotenv()
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 discord_token = os.getenv("DISCORD_BOT_TOKEN")
-client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
+client = commands.AutoShardedBot(command_prefix="*", intents=discord.Intents.all())
 
 ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -55,22 +55,6 @@ def upload_image_to_s3(image, file_name):
         print("Credentials not available")
         return False
 
-# def read_image(file_path):
-#     try:
-#         image = Image.open(file_path)
-#         return image
-#     except FileNotFoundError:
-#         print(f"File not found: {file_path}")
-#         return None
-#     except Exception as e:
-#         print(f"Error while reading the image: {e}")
-#         return None
-
-# if __name__ == "__main__":
-#     file_path = "/Users/ad_demon/Documents/GitHub/projectX/Aatish_a_brain_with_gears_turning_inside.jpg"
-#     image = read_image(file_path)
-#     upload_image_to_s3(image, 'temp.jpg')
-    
 
 def split_image(image_file):
     with Image.open(image_file) as im:
@@ -122,22 +106,6 @@ async def download_image(url, filename, prompt):
             upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
             upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
             upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
-            # top_left.save(
-            #     os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
-            # )
-            # top_right.save(
-            #     os.path.join(output_folder, "option2_" + file_prefix + ".jpg")
-            # )
-            # bottom_left.save(
-            #     os.path.join(output_folder, "option3_" + file_prefix + ".jpg")
-            # )
-            # bottom_right.save(
-            #     os.path.join(output_folder, "option4_" + file_prefix + ".jpg")
-            # )
-
-        # else:
-        #     os.rename(f"{directory}/{input_folder}/{filename}", f"{directory}/{output_folder}/{filename}")
-        # Delete the input file
         os.remove(f"{input_file}")
 
 
@@ -164,7 +132,7 @@ async def on_message(message):
             await download_image(attachment.url, f"{file_prefix}{attachment.filename}", prompt)
 
 
-client.run(discord_token)
+client.run(discord_token, reconnect=True)
 
 # <Message id=1102464819505942590 channel=<TextChannel id=1102068352932909158 name='general' position=0 nsfw=False news=False category_id=1102068352932909156>
 # type=<MessageType.default: 0> author=<Member id=936929561302675456 name='Midjourney Bot' discriminator='9282' bot=True nick=None

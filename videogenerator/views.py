@@ -1,19 +1,15 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Request, Script, ProjectAssets, Scene
 from utility.aws_connector import cdn_path
 from django.core.exceptions import ObjectDoesNotExist
-# from django.contrib.auth import get_user_model
-# from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
-import jwt
 from accounts.models import User
 import os
 import base64
 # import zipfile
 import json
-from utility.backendProcessInterface import process_scenes, process_image_desc, path_to_request, generate_initial_assets, generate_final_video
+from utility.backendProcessInterface import *
 from utility.text_to_audio import get_voice_samples
 # from django.http import StreamingHttpResponse
 # from django.http import HttpResponse
@@ -167,25 +163,16 @@ def get_video_files(request):
 @api_view(['GET'])
 def update_url(request):
     try:
-        scene_id = request.query_params.get('sceneid')
-        category = request.query_params.get('category')
+        if request.query_params.get('reqid'):
+            return update_url_by_reqid(request)
 
-        if scene_id and category:
-            scene_obj = Scene.objects.get(id=scene_id)
-            project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
-            asset = project_asset.get(category)
+        elif request.query_params.get('sceneid') and request.query_params.get('category'):
+            return update_url_by_sceneid_and_category(request)
 
-            if asset:
-                cloudfront_url = cdn_path(asset)
-                return Response({'cloudfront_url': cloudfront_url})
-            else:
-                return Response({'error': 'Asset not found'}, status=404)
-        else:
-            return Response({'error': 'Missing parameters'}, status=400)
-    except Scene.DoesNotExist:
-        return Response({'error': 'Scene not found'}, status=404)
-    except ProjectAssets.DoesNotExist:
-        return Response({'error': 'Project assets not found'}, status=404)
+        return Response({'error': 'Invalid parameters'}, status=400)
+
+    except (Scene.DoesNotExist, ProjectAssets.DoesNotExist) as e:
+        return Response({'error': str(e)}, status=404)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
 
