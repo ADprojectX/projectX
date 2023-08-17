@@ -5,10 +5,10 @@ import sys
 import os
 from tempfile import NamedTemporaryFile
 sys.path.append(os.path.join(os.getcwd(), 'captions'))
-audio_file = "OBJECT_STORE/95608c0d-442e-40bb-bf0b-a321080f9cb2/5d78e522-718f-454d-b8da-78bc59d7a478/audio/XIL/e4061372-ab05-4584-a6da-9d16f028509a/Arnold/0.mp3"
-image_file = "OBJECT_STORE/95608c0d-442e-40bb-bf0b-a321080f9cb2/5d78e522-718f-454d-b8da-78bc59d7a478/image/mjx/e4061372-ab05-4584-a6da-9d16f028509a/option1_a_brain_with_gears_turning_inside.jpg"
-imv_path = "OBJECT_STORE/95608c0d-442e-40bb-bf0b-a321080f9cb2/5d78e522-718f-454d-b8da-78bc59d7a478/intermediate_video/e4061372-ab05-4584-a6da-9d16f028509a/mjx_Arnold.mp4"
-narration = "Welcome to today's videos, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+audio_file = "OBJECT_STORE/c6f3321a-4827-49f0-9c57-cbc5f13b3fc3/717864c2-3cf3-46b1-9ab0-ff8cba2c610d/audio/XIL/1589a4a0-1f80-430f-a099-ca3616f4c22d/Emily/0.mp3"
+image_file = "OBJECT_STORE/c6f3321a-4827-49f0-9c57-cbc5f13b3fc3/717864c2-3cf3-46b1-9ab0-ff8cba2c610d/image/mjx/1589a4a0-1f80-430f-a099-ca3616f4c22d/fa68f175-87e7-4f44-b115-957fca57765b_option1.jpg"
+imv_path = "OBJECT_STORE/c6f3321a-4827-49f0-9c57-cbc5f13b3fc3/717864c2-3cf3-46b1-9ab0-ff8cba2c610d/intermediate_video/1589a4a0-1f80-430f-a099-ca3616f4c22d/mjx_Emily.mp4"
+narration = "To begin, heat a tablespoon of olive oil in a pan over medium heat. Add boneless chicken breasts and cook them until they turn golden brown on both sides. Remove the chicken from the pan and set it aside."
 audio = aws_connector.get_file_from_s3(audio_file)
 image = aws_connector.get_file_from_s3(image_file)
 # Create temporary files for audio and image

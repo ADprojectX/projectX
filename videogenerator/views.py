@@ -100,7 +100,7 @@ def save_script(request):
             script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
             # Update the script_data field in the Script model
-            initial_script = process_image_desc(script_dict)
+            initial_script = process_image_desc(script_dict, req.topic)
             script.add_entire_script(initial_script)
             
             request_path = path_to_request(req)

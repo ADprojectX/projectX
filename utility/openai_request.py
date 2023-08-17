@@ -43,7 +43,7 @@ def request_script(text):
     print(f"The script for given topic is \n \n '{refined_answer}'.")
     return refined_answer
 
-def request_image_descriptions(narration):
+def request_image_descriptions(narration, title):
     prompt= f"""
         I want you to act as the one who can provide me with the Image Description which I can give to image generation tool like midJourney, Stable diffusion etc.
 
@@ -53,13 +53,17 @@ def request_image_descriptions(narration):
 
         Here I would want to an image of brain in the background as that will make the most sense
 
+        In addition to that I am also giving you the title of this particular video from whose entire script I am giving you the text.
+
+        This is the title of the video: "{title}". This is just for reference to give you context
+
         So now I want you to give me the image description for the below text:
 
         "{narration}"
 
-        Please give me the output in a single small paragraph or a sentence. This description is what I will give to midjourney for example. 
+        Please give me the output in a single small sentence. This description is what I will give to midjourney for example. 
 
-        Please strictly follow the below format, do not include anything else in the output. You need to provide what is asked in the square bracket below
+        Please strictly follow the below format, do not include anything else in the output and keep the Image description less than 15 to 20 words. You need to provide what is asked in the square bracket below
 
         Image Description: [exact text to send to image generation tool]
     """
@@ -67,10 +71,16 @@ def request_image_descriptions(narration):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=100
+        max_tokens=2000
     )
 
     image_description = response["choices"][0]["message"]["content"]
 
-    print(f"The script for given topic is \n \n '{image_description}'.")
-    return image_description
+    pattern = r"Image Description: \[(.*?)\]"
+    match = re.search(pattern, image_description)
+    if match:
+        print(f"The script for given topic is \n \n '{match.group(1)}'.")
+        return match.group(1)
+    else:
+        print(f"The script for given topic is \n \n '{image_description}'.")
+        return image_description

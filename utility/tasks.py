@@ -15,6 +15,7 @@ from videogenerator.models import Request
 from time import sleep
 from utility.aws_connector import *
 from tempfile import NamedTemporaryFile
+from time import sleep
 
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
@@ -66,9 +67,11 @@ def captionated_video(assets, narration, imv_path):
     for k,v in assets.items():
         if k == 'audio':
             while not check_file_exists(v):
+                sleep(120)
                 continue
             audio = get_file_from_s3(v)
         if k == 'image':
+            sleep(120)
             while not check_file_exists(v):
                 continue
             image = get_file_from_s3(v)

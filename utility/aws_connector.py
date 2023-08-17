@@ -62,7 +62,7 @@ def upload_file_to_s3(file_data, file_name):
         # Upload the file-like object to S3
         while not file_exists_in_s3(file_name):
             s3.upload_fileobj(file_obj, AWS_BUCKET, file_name)
-            sleep(10)
+            sleep(120)
         print("Upload Successful")
         return True
     except NoCredentialsError:

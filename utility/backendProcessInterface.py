@@ -22,7 +22,7 @@ def process_scenes(request):
     scene_dic = tp.script_processing(script_response)#(temp_script)  # dictionary generating for narration and img desc
     return scene_dic
 
-def process_image_desc(script):
+def process_image_desc(script, topic):
 
     ######################temporary#################################
     # # Split the string based on new lines
@@ -41,7 +41,7 @@ def process_image_desc(script):
     ######################temporary#################################
     
     for index, scene, narration in script:
-        script[index].append(osr.request_image_descriptions(narration))
+        script[index].append(osr.request_image_descriptions(narration, topic))
     return script
     
 def path_to_request(request):
