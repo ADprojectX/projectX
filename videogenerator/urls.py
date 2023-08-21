@@ -10,6 +10,4 @@ urlpatterns = [
     path('get-project/', views.get_user_projects, name='get_user_projects'),
     path('get-thumbnails/', views.get_thumbnail_images, name='get_thumbnails'),
     path('download-project/', views.download_project, name='download_project'),
-    # path('set-voice/', views.set_voice, name='set_voice'),
-    # path('video/', views.get_video, name='get_video'),
 ]

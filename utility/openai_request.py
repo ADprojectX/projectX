@@ -2,11 +2,15 @@ import openai
 import os
 import re
 from dotenv import load_dotenv
-dotenv_path = os.path.join(os.getcwd(), ".env")
-load_dotenv(dotenv_path)
-openai.api_key = os.getenv('OPENAI_SECRET_KEY')
-openai.organization = "org-M7njFxmHRMFtHSA59Oli6QGm"
 
+# load_dotenv()
+def refresh_env():
+    load_dotenv(override=True)
+    openai.api_key = os.getenv('OPENAI_SECRET_KEY')
+    openai.organization = os.getenv('OPENAI_ORG')
+
+# openai.api_key = refresh_env('OPENAI_SECRET_KEY')
+# openai.organization = refresh_env('OPENAI_ORG')
 
 def extract_narration(text):
     # The pattern looks for 'Narrator:' followed by any character (.) zero or more times (?)
@@ -18,6 +22,7 @@ def extract_narration(text):
 
 
 def request_script(text):
+    refresh_env()
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -44,6 +49,7 @@ def request_script(text):
     return refined_answer
 
 def request_image_descriptions(narration, title):
+    refresh_env()
     prompt= f"""
         I want you to act as the one who can provide me with the Image Description which I can give to image generation tool like midJourney, Stable diffusion etc.
 
@@ -75,12 +81,17 @@ def request_image_descriptions(narration, title):
     )
 
     image_description = response["choices"][0]["message"]["content"]
-
-    pattern = r"Image Description: \[(.*?)\]"
+    pattern = r'Image Description: [\'"]?(.*?)[\'"]?(?=\.$|$)'
+    # pattern = r"Image Description: \[(.*?)\]"
     match = re.search(pattern, image_description)
     if match:
-        print(f"The script for given topic is \n \n '{match.group(1)}'.")
-        return match.group(1)
+        result = match.group(1).strip().replace("  ", " ")
+        result = re.sub(r'^[\'"]|[\'"]$', '', result)
+        result = re.sub(r'\s+', ' ', result)
+        print(f"The script for given topic: \n \n '{result}'.")
+        return result
     else:
         print(f"The script for given topic is \n \n '{image_description}'.")
         return image_description
+
+# dotenv_path = os.path.join(os.getcwd(), ".env")

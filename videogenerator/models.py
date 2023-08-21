@@ -50,7 +50,6 @@ class Script(models.Model):
                         'script': self.request.id
                     }
                 )
-            print(scene.script, 'hello')
             new_current_scenes.append(str(scene.id))
             if created:
                 # If the scene was created a new, add it to the relationships
@@ -136,6 +135,9 @@ class PendingTask(models.Model):
                 # Handle the case where a duplicate entry already exists
                 raise Exception("PendingTask with the same request, prompt, and folder already exists.")
             else:
+                if prompt and len(prompt) > 1000:
+                # Truncate the prompt if it's too long
+                    prompt = prompt[:1000]
                 with transaction.atomic():
                     created = cls.objects.create(request=request, prompt=prompt, folder=folder)
                     return created

@@ -3,36 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import User
 from .serializers import UserSerializer, LoginSerializer
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth import authenticate, login
-import jwt, datetime
-from rest_framework.exceptions import AuthenticationFailed
-import uuid
-from django.utils import timezone
-from django.middleware import csrf
-import pyrebase
-import os
-# with open(f"{os.getcwd()}/firebase-projectX.json", 'r') as json_file:
-#     cred = json.load(json_file)
-# // Your web app's Firebase configuration
-firebaseConfig = {
-"apiKey": "AIzaSyAAiQ_KMPP8QTiCLVN87FoCAkSv2eIPHTo",
-"authDomain": "projectx-392305.firebaseapp.com",
-"databaseURL": "https://projectx-392305-default-rtdb.firebaseio.com",
-"projectId": "projectx-392305",
-"storageBucket": "projectx-392305.appspot.com",
-"messagingSenderId": "745908786386",
-"appId": "1:745908786386:web:389226871c33d8a766c90b",
-"serviceAccount": f"{os.getcwd()}/firebase-projectX.json"
-}
-
-firebase = pyrebase.initialize_app(firebaseConfig)
-auth = firebase.auth()
-
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.hashers import make_password
 from .models import User
 from .serializers import UserSerializer
 from django.db.utils import IntegrityError
@@ -43,7 +16,6 @@ def signup_user(request):
     if serializer.is_valid():
         data = serializer.validated_data
         password = data.pop('password')
-        
         try:
             user = User.objects.create_user(**data, password=password)
             return Response({'id': user.id}, status=status.HTTP_201_CREATED)
@@ -55,6 +27,13 @@ def signup_user(request):
     else:
         # Here we're returning serializer.errors directly, which provides detailed messages
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET',])
+def user_dashboard(request):
+    uid = request.query_params.get('uid')
+    user = User.objects.filter(id=uid).first()
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
 
 
 # @api_view(['POST'])
@@ -123,22 +102,6 @@ def signup_user(request):
 #     else:
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET',])
-def user_dashboard(request):
-
-    # token = request.COOKIES.get('jwt')
-    # if not token or not JwtCsrfTokens.objects.filter(jwt_token=token).exists():
-    #     raise AuthenticationFailed('Unauthenticated!')
-
-    # try:
-    #     payload = jwt.decode(token, 'secrett', algorithms=['HS256'])
-    # except jwt.ExpiredSignatureError:
-    #     raise AuthenticationFailed('Unauthenticated!')
-
-    user = User.objects.filter(id=payload['uid']).first()
-    serializer = UserSerializer(user)
-    return Response(serializer.data)
-
 # @api_view(['POST'])
 # def logout_user(request):
 #     JwtCsrfTokens.objects.filter(jwt_token=request.COOKIES.get('jwt')).delete()
@@ -168,3 +131,11 @@ def user_dashboard(request):
 #     else:
 #         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+# from django.contrib.auth.hashers import make_password
+# from django.contrib.auth import authenticate, login
+# import jwt, datetime
+# from rest_framework.exceptions import AuthenticationFailed
+# import uuid
+# from django.utils import timezone
+# from django.middleware import csrf
+# from django.contrib.auth.hashers import make_password

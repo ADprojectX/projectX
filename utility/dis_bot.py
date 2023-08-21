@@ -9,37 +9,31 @@ import database as db
 import boto3
 from botocore.exceptions import NoCredentialsError
 import tempfile
+from decouple import config
 
-load_dotenv()
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-discord_token = os.getenv("DISCORD_BOT_TOKEN")
-# intents.typing = False
 client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
-ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_BUCKET = os.getenv('AWS_STORAGE_BUCKET_NAME')
+def refresh_env(key):
+    load_dotenv(override = True)
+    return os.getenv(key)
 
-s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
+s3 = boto3.client('s3', aws_access_key_id=refresh_env('AWS_ACCESS_KEY_ID'), aws_secret_access_key=refresh_env("AWS_SECRET_ACCESS_KEY"))
+
 def count_files_in_s3_folder(folder_path):
-    # Initialize the S3 client
     # List objects in the specified folder
-    objects = s3.list_objects_v2(Bucket=AWS_BUCKET, Prefix=folder_path)
-    
+    objects = s3.list_objects_v2(Bucket=refresh_env("AWS_STORAGE_BUCKET_NAME"), Prefix=folder_path)
     # Count the number of files
     file_count = len(objects.get('Contents', []))
-     
     return file_count
 
 def upload_image_to_s3(image, file_name):
-    s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY_ID, aws_secret_access_key=SECRET_ACCESS_KEY)
     try:
         # Create a temporary file to save the image
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
             image.save(temp_file, format="JPEG")
             temp_file.flush()
             # Upload the temporary file to S3
-            s3.upload_file(temp_file.name, AWS_BUCKET, file_name)
+            s3.upload_file(temp_file.name, refresh_env("AWS_STORAGE_BUCKET_NAME"), file_name)
         print("Upload Successful")
         return True
     except FileNotFoundError:
@@ -70,6 +64,9 @@ async def download_image(url, filename, prompt):
     response = requests.get(url)
     if response.status_code == 200:
         _, ext = os.path.splitext(filename)
+        if prompt and len(prompt) > 1000:
+            # Truncate the prompt if it's too long
+            prompt = prompt[:1000]
         output_folder = db.find_pending_task(prompt)
         if output_folder == None:
             return
@@ -126,7 +123,7 @@ async def on_message(message):
             await download_image(attachment.url, f"{file_prefix}{attachment.filename}", prompt)
 
 
-client.run(discord_token)
+client.run(refresh_env("DISCORD_BOT_TOKEN"))
 
 # <Message id=1102464819505942590 channel=<TextChannel id=1102068352932909158 name='general' position=0 nsfw=False news=False category_id=1102068352932909156>
 # type=<MessageType.default: 0> author=<Member id=936929561302675456 name='Midjourney Bot' discriminator='9282' bot=True nick=None
@@ -157,3 +154,10 @@ client.run(discord_token)
         #     upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
         #     upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
         # os.remove(f"{input_file}")
+
+# CHANNEL_ID = os.getenv("CHANNEL_ID")
+# discord_token = os.getenv("DISCORD_BOT_TOKEN")
+# intents.typing = False
+# ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+# SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+# AWS_BUCKET = config('AWS_STORAGE_BUCKET_NAME')

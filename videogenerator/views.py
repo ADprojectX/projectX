@@ -7,45 +7,18 @@ from rest_framework import status
 from accounts.models import User
 import os
 import base64
-# import zipfile
 import json
 from utility.backendProcessInterface import *
 from utility.text_to_audio import get_voice_samples
-# from django.http import StreamingHttpResponse
-# from django.http import HttpResponse
-# from wsgiref.util import FileWrapper
-
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
-# def user_authorization(jwt_token):
-#     try:
-#         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
-#         user_id = payload.get('id')
-#         user = User.objects.get(id=user_id)
-#         if not user.is_authenticated:
-#             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-#         return user
-#     except jwt.exceptions.InvalidTokenError:
-#         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
-#     except User.DoesNotExist:
-#         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
-
 @api_view(['POST'])
 def create_request(request):
-    # jwt_token = request.COOKIES.get('jwt')
-    # # if not jwt_token:
-    # #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
-    # user = user_authorization(jwt_token)
-    # if user is None:
-    #     return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    print(request.data)
     fireid = request.data.get('fireid')
     user = User.objects.get(fireid=fireid)
     topic = request.data.get('topic')
     req = Request.objects.create(user=user, topic=topic)
-    
 
     # Process the request and generate the script as a dictionary
     script_dict = process_scenes(request)
@@ -93,9 +66,6 @@ def save_script(request):
             req.save()
             # Deserialize the final_scene JSON string to a Python object
             script_dict = json.loads(final_scene)
-            print("SCRIPTDICT")
-            print(script_dict)
-            print(type(script_dict))
             # Check if a Script object exists for the Request
             script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
@@ -126,9 +96,6 @@ def download_project(request):
         req_id = request.query_params.get('reqid')
         req = Request.objects.get(id=req_id)
         if req.final_video_asset:
-            print('fuck')
-            print(req.final_video_asset)
-            print('fuck2')
             return Response({'final_video': cdn_path(req.final_video_asset)})
         script = Script.objects.get(request=req)
         request_path = path_to_request(req)
@@ -193,8 +160,6 @@ def voice_samples(request):
 
 @api_view(["GET"])
 def get_user_projects(request):
-    # jwt_token = request.COOKIES.get('jwt')
-    # user = user_authorization(jwt_token)
     fireid = request.query_params.get('fireid')
     user = User.objects.get(fireid=fireid)
     
@@ -296,3 +261,30 @@ def get_thumbnail_images(request):
 
 #     # Delete the temporary zip file
 #     os.remove(temp_zip_path)
+
+
+# from django.http import StreamingHttpResponse
+# from django.http import HttpResponse
+# from wsgiref.util import FileWrapper
+
+# config = Config(autoreload=True)
+
+
+# def user_authorization(jwt_token):
+#     try:
+#         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
+#         user_id = payload.get('id')
+#         user = User.objects.get(id=user_id)
+#         if not user.is_authenticated:
+#             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+#         return user
+#     except jwt.exceptions.InvalidTokenError:
+#         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
+#     except User.DoesNotExist:
+#         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        # jwt_token = request.COOKIES.get('jwt')
+        # # if not jwt_token:
+        # #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        # user = user_authorization(jwt_token)
+        # if user is None:
+        #     return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)
