@@ -1,20 +1,47 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import requests
 from dotenv import load_dotenv
 from PIL import Image
 import os
 import re
-
-# from text_to_image import pending_tasks
 import database as db
+import boto3
+from botocore.exceptions import NoCredentialsError
+import tempfile
+from decouple import config
 
-
-# dotenv_path = os.path.join(os.getcwd(), ".env")
-load_dotenv()
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-discord_token = os.getenv("DISCORD_BOT_TOKEN")
 client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
+
+def refresh_env(key):
+    load_dotenv(override = True)
+    return os.getenv(key)
+
+s3 = boto3.client('s3', aws_access_key_id=refresh_env('AWS_ACCESS_KEY_ID'), aws_secret_access_key=refresh_env("AWS_SECRET_ACCESS_KEY"))
+
+def count_files_in_s3_folder(folder_path):
+    # List objects in the specified folder
+    objects = s3.list_objects_v2(Bucket=refresh_env("AWS_STORAGE_BUCKET_NAME"), Prefix=folder_path)
+    # Count the number of files
+    file_count = len(objects.get('Contents', []))
+    return file_count
+
+def upload_image_to_s3(image, file_name):
+    try:
+        # Create a temporary file to save the image
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            image.save(temp_file, format="JPEG")
+            temp_file.flush()
+            # Upload the temporary file to S3
+            s3.upload_file(temp_file.name, refresh_env("AWS_STORAGE_BUCKET_NAME"), file_name)
+        print("Upload Successful")
+        return True
+    except FileNotFoundError:
+        print("The file was not found")
+        return False
+    except NoCredentialsError:
+        print("Credentials not available")
+        return False
 
 
 def split_image(image_file):
@@ -37,53 +64,45 @@ async def download_image(url, filename, prompt):
     response = requests.get(url)
     if response.status_code == 200:
         _, ext = os.path.splitext(filename)
-        # prompt = re.sub(
-        #     r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt.lower()[12:]
-        # ).strip()
-
-        # pending_prompt = prompt.replace("_", " ").strip()
-        output_folder = db.remove_pending_tasks(prompt)
+        if prompt and len(prompt) > 1000:
+            # Truncate the prompt if it's too long
+            prompt = prompt[:1000]
+        output_folder = db.find_pending_task(prompt)
         if output_folder == None:
             return
-        input_folder = output_folder + "/input"
+        input_folder = output_folder
         # Check if the input folder exists, and create it if necessary
         None if os.path.exists(input_folder) else os.makedirs(input_folder)
         # print(prompt, ext, 'demodummy')
-        file_ext = f"{prompt}{ext}"
-        with open(f"{input_folder}/{file_ext}", "wb") as f:
-            f.write(response.content)
-        print(f"Image downloaded: {file_ext}")
 
-        input_file = os.path.join(input_folder, file_ext)
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as temp_file:
+            temp_file.write(response.content)
+            temp_file_path = temp_file.name
+
+        print(f"Image downloaded: {prompt}")
 
         if "UPSCALED_" not in filename:
-            # file_prefix = os.path.splitext(filename)[0]
-            file_prefix = prompt
-            # Split the image
-            top_left, top_right, bottom_left, bottom_right = split_image(input_file)
-            # Save the output images with dynamic names in the output folder
-            top_left.save(
-                os.path.join(output_folder, "option1_" + file_prefix + ".jpg")
-            )
-            top_right.save(
-                os.path.join(output_folder, "option2_" + file_prefix + ".jpg")
-            )
-            bottom_left.save(
-                os.path.join(output_folder, "option3_" + file_prefix + ".jpg")
-            )
-            bottom_right.save(
-                os.path.join(output_folder, "option4_" + file_prefix + ".jpg")
-            )
+            # file_prefix = prompt.replace(" ", '_').lower()
+            top_left, top_right, bottom_left, bottom_right = split_image(temp_file_path)
+            # i = count_files_in_s3_folder(output_folder)
+            i = 0
+            upload_image_to_s3(top_left, f"{output_folder}_option{i+1}.jpg")
+            upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
+            upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
+            upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
 
-        # else:
-        #     os.rename(f"{directory}/{input_folder}/{filename}", f"{directory}/{output_folder}/{filename}")
-        # Delete the input file
-        os.remove(f"{input_file}")
+        db.delete_pending_task(prompt)
+        os.remove(temp_file_path)
 
+
+# @tasks.loop(minutes=15)  # Adjust the interval as needed
+# async def update_presence():
+#     await client.change_presence(activity=discord.Game(name="Staying Active"))
 
 @client.event
 async def on_ready():
     print("Bot connected")
+    # update_presence.start()
 
 
 @client.event
@@ -104,7 +123,7 @@ async def on_message(message):
             await download_image(attachment.url, f"{file_prefix}{attachment.filename}", prompt)
 
 
-client.run(discord_token)
+client.run(refresh_env("DISCORD_BOT_TOKEN"))
 
 # <Message id=1102464819505942590 channel=<TextChannel id=1102068352932909158 name='general' position=0 nsfw=False news=False category_id=1102068352932909156>
 # type=<MessageType.default: 0> author=<Member id=936929561302675456 name='Midjourney Bot' discriminator='9282' bot=True nick=None
@@ -115,3 +134,30 @@ client.run(discord_token)
 # prompt = re.sub(r"_\w{8}-\w{4}-\w{4}-\w{4}-\w{12}", "", prompt)
 # prompt = prompt.strip()
 # pending_prompt = prompt.replace("_", " ")
+
+        # file_ext = f"{ext}"
+        # with open(f"{input_folder}/{file_ext}", "wb") as f:
+        #     f.write(response.content)
+        # print(f"Image downloaded: {prompt}{ext}")
+
+        # input_file = os.path.join(input_folder, file_ext)
+
+        # if "UPSCALED_" not in filename:
+        #     # file_prefix = os.path.splitext(filename)[0]
+        #     file_prefix = prompt.replace(" ", '_').lower()
+        #     # Split the image
+        #     top_left, top_right, bottom_left, bottom_right = split_image(input_file)
+        #     # Save the output images with dynamic names in the output folder
+        #     i = count_files_in_s3_folder(output_folder)
+        #     upload_image_to_s3(top_left, f"{output_folder}_option{i+1}.jpg")
+        #     upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
+        #     upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
+        #     upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
+        # os.remove(f"{input_file}")
+
+# CHANNEL_ID = os.getenv("CHANNEL_ID")
+# discord_token = os.getenv("DISCORD_BOT_TOKEN")
+# intents.typing = False
+# ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+# SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+# AWS_BUCKET = config('AWS_STORAGE_BUCKET_NAME')

@@ -1,42 +1,22 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Request, Script, PendingTask
-from django.contrib.auth import get_user_model
-from django.views.decorators.csrf import csrf_exempt
+from .models import Request, Script, ProjectAssets, Scene
+from utility.aws_connector import cdn_path
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
-import jwt
 from accounts.models import User
 import os
 import base64
-import zipfile
 import json
-from utility.backendProcess import process_scenes, process_image_desc, path_to_request, generate_video
+from utility.backendProcessInterface import *
 from utility.text_to_audio import get_voice_samples
-from django.http import StreamingHttpResponse
-from django.http import HttpResponse
-from wsgiref.util import FileWrapper
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
 @api_view(['POST'])
 def create_request(request):
-    jwt_token = request.COOKIES.get('jwt')
-    # if not jwt_token:
-    #     print('gere')
-    #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    try:
-        payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
-        user_id = payload.get('id')
-        user = User.objects.get(id=user_id)
-        if not user.is_authenticated:
-            return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
-    except jwt.exceptions.InvalidTokenError:
-        return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
-    except User.DoesNotExist:
-        return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
-
+    fireid = request.data.get('fireid')
+    user = User.objects.get(fireid=fireid)
     topic = request.data.get('topic')
     req = Request.objects.create(user=user, topic=topic)
 
@@ -45,13 +25,12 @@ def create_request(request):
 
     try:
         # Retrieve the existing Script object for the Request (if it exists)
-        script = Script.objects.get(request=req.id)
-        script.script_data = script_dict  # Update the script_data field
-        script.save()  # Save the changes to the existing Script object
+        script = Script.objects.get(request=req)
+        script.add_entire_script(script_dict)  # Update the script_data field
     except Script.DoesNotExist:
         # If the Script object doesn't exist, create a new one
-        script = Script.objects.create(request=req, script_data=script_dict)
-
+        script = Script.objects.create(request=req)
+        script.add_entire_script(script_dict)
     return Response({'message': 'Request created successfully', 'script': script_dict, 'reqid': req.id})
 
 
@@ -62,8 +41,9 @@ def get_script(request):
         req = Request.objects.get(id=req_id)
         try:
             script = Script.objects.get(request=req)
-            script_dict = script.script_data
-            return Response({'message': 'Script retrieved successfully', 'script': script_dict})
+            current_script = script.get_current_script()
+            # script_dict = script.script_data
+            return Response({'message': 'Script retrieved successfully', 'script': current_script})
         except Script.DoesNotExist:
             return Response({'message': 'Script not found'}, status=status.HTTP_404_NOT_FOUND)
     except Request.DoesNotExist:
@@ -71,11 +51,13 @@ def get_script(request):
 
 # Your other views here (save_script, get_video_files, voice_samples, voice_view)
 
-@api_view(['GET'])
+@api_view(['POST'])
 def save_script(request):
-    final_scene = request.query_params.get('finalScene', None)
-    req_id = request.query_params.get('reqid')
-    voice = request.query_params.get('voice')
+    payload = request.data
+    req_id = payload.get('reqid')
+    voice = payload.get('voice')
+    final_scene = payload.get('scenes')
+
     if final_scene and req_id:
         try:
             # Retrieve the associated Request object
@@ -84,16 +66,15 @@ def save_script(request):
             req.save()
             # Deserialize the final_scene JSON string to a Python object
             script_dict = json.loads(final_scene)
-            
             # Check if a Script object exists for the Request
-            script, created = Script.objects.get_or_create(request=req_id)  # Use request_id for the lookup
+            script, created = Script.objects.get_or_create(request=req)  # Use request_id for the lookup
             
             # Update the script_data field in the Script model
-            script.script_data = process_image_desc(script_dict)
-            script.save()  # Save the changes to the database
+            initial_script = process_image_desc(script_dict, req.topic)
+            script.add_entire_script(initial_script)
             
             request_path = path_to_request(req)
-            generate_video(req, script.script_data, request_path)
+            generate_initial_assets(req, script.current_scenes, request_path, 'mjx')
 
             if not created:
                 return Response({'success': True})
@@ -108,36 +89,64 @@ def save_script(request):
     else:
         return Response({'error': 'finalScene or reqid parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-
+@api_view(["GET"])    
+def download_project(request):
+    try:
+        # changes = request.query_params.get('changes')
+        req_id = request.query_params.get('reqid')
+        req = Request.objects.get(id=req_id)
+        if req.final_video_asset:
+            return Response({'final_video': cdn_path(req.final_video_asset)})
+        script = Script.objects.get(request=req)
+        request_path = path_to_request(req)
+        cdn_url = generate_final_video(script.current_scenes, request_path, req)
+        return Response({'final_video': cdn_url})
+    except Exception as e:
+        pass
+#geturlfromsceneID
 
 @api_view(['GET'])
 def get_video_files(request):
-    # Assuming your video files are stored in a specific directory
-    video_directory = os.path.join(os.getcwd(), 'OBJECT_STORE', '12', '54', 'output')
+    try:
+        req_id = request.query_params.get('reqid')
+        req = Request.objects.get(id=req_id)
+        script = Script.objects.get(request=req)
+        scene_lists = script.current_scenes
+        asset_urls = []
 
-    # Get the list of video file names
-    video_files = os.listdir(video_directory)
+        for i, scene in enumerate(scene_lists):
+            try:
+                scene_obj = Scene.objects.get(id=scene)
+                project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+                intermediate_video = project_asset.get('intermediate_video')
 
-    # Create a temporary zip file
-    temp_zip_path = os.path.join(video_directory, 'temp.zip')
+                if intermediate_video:
+                    cloudfront_url = cdn_path(intermediate_video)
+                    asset_urls.append([i, scene, cloudfront_url])
+                else:
+                    asset_urls.append([i, scene, cloudfront_url])
+            except ObjectDoesNotExist:
+                asset_urls.append(None)
+        return Response({'asset_urls': asset_urls})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
-    # Iterate through the video files and add them to the zip file
-    with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
-        for file_name in video_files:
-            file_path = os.path.join(video_directory, file_name)
-            zip_file.write(file_path, arcname=file_name)
 
-    # Open the zip file in binary mode and create a file wrapper
-    file_wrapper = FileWrapper(open(temp_zip_path, 'rb'))
+@api_view(['GET'])
+def update_url(request):
+    try:
+        if request.query_params.get('reqid'):
+            return update_url_by_reqid(request)
 
-    # Create a response with the file wrapper as the content
-    response = HttpResponse(file_wrapper, content_type='application/octet-stream')
-    response['Content-Disposition'] = 'attachment; filename="video_files.zip"'
+        elif request.query_params.get('sceneid') and request.query_params.get('category'):
+            return update_url_by_sceneid_and_category(request)
 
-    # Delete the temporary zip file
-    os.remove(temp_zip_path)
+        return Response({'error': 'Invalid parameters'}, status=400)
 
-    return response
+    except (Scene.DoesNotExist, ProjectAssets.DoesNotExist) as e:
+        return Response({'error': str(e)}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 @api_view(["GET"])
 def voice_samples(request):
@@ -149,6 +158,39 @@ def voice_samples(request):
 
     return Response(serialized_voice_samples)
 
+@api_view(["GET"])
+def get_user_projects(request):
+    fireid = request.query_params.get('fireid')
+    user = User.objects.get(fireid=fireid)
+    
+    user_requests = Request.objects.filter(user=user).values()
+    return Response(user_requests)
+
+@api_view(["GET"])
+def get_thumbnail_images(request):
+    try:
+        req_id = request.query_params.get('reqid')
+        req = Request.objects.get(id=req_id)
+        script = Script.objects.get(request=req)
+        scene_lists = script.current_scenes
+        asset_urls = []
+        for i, scene in enumerate(scene_lists):
+            try:
+                scene_obj = Scene.objects.get(id=scene)
+                project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
+                image = project_asset.get('image')
+
+                if image:
+                    cloudfront_url = cdn_path(image)
+                    asset_urls.append([i, scene, cloudfront_url])
+                else:
+                    asset_urls.append([i, scene, cloudfront_url])
+            except ObjectDoesNotExist:
+                asset_urls.append(None)
+        return Response({'asset_urls': asset_urls})
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+    
 
 
 # @api_view(["GET"])
@@ -194,3 +236,55 @@ def voice_samples(request):
 #         return Response({'error': 'Request not found'}, status=status.HTTP_404_NOT_FOUND)
 #     except Script.DoesNotExist:
 #         return Response({'error': 'Script not found'}, status=status.HTTP_404_NOT_FOUND)
+
+# # Assuming your video files are stored in a specific directory
+#     video_directory = os.path.join(os.getcwd(), 'OBJECT_STORE', '12', '54', 'output')
+#     # video_directory = 
+#     # Get the list of video file names
+#     video_files = os.listdir(video_directory)
+
+#     # Create a temporary zip file
+#     temp_zip_path = os.path.join(video_directory, 'temp.zip')
+
+#     # Iterate through the video files and add them to the zip file
+#     with zipfile.ZipFile(temp_zip_path, 'w') as zip_file:
+#         for file_name in video_files:
+#             file_path = os.path.join(video_directory, file_name)
+#             zip_file.write(file_path, arcname=file_name)
+
+#     # Open the zip file in binary mode and create a file wrapper
+#     file_wrapper = FileWrapper(open(temp_zip_path, 'rb'))
+
+#     # Create a response with the file wrapper as the content
+#     response = HttpResponse(file_wrapper, content_type='application/octet-stream')
+#     response['Content-Disposition'] = 'attachment; filename="video_files.zip"'
+
+#     # Delete the temporary zip file
+#     os.remove(temp_zip_path)
+
+
+# from django.http import StreamingHttpResponse
+# from django.http import HttpResponse
+# from wsgiref.util import FileWrapper
+
+# config = Config(autoreload=True)
+
+
+# def user_authorization(jwt_token):
+#     try:
+#         payload = jwt.decode(jwt_token, 'secrett', algorithms=['HS256'])
+#         user_id = payload.get('id')
+#         user = User.objects.get(id=user_id)
+#         if not user.is_authenticated:
+#             return Response({'message': 'User is not authenticated'}, status=status.HTTP_401_UNAUTHORIZED)
+#         return user
+#     except jwt.exceptions.InvalidTokenError:
+#         return Response({'message': 'Invalid JWT token'}, status=status.HTTP_401_UNAUTHORIZED)
+#     except User.DoesNotExist:
+#         return Response({'message': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        # jwt_token = request.COOKIES.get('jwt')
+        # # if not jwt_token:
+        # #     return Response({'message': 'JWT token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+        # user = user_authorization(jwt_token)
+        # if user is None:
+        #     return Response({'message': 'User authentication failed'}, status=status.HTTP_401_UNAUTHORIZED)

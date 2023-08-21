@@ -1,12 +1,10 @@
 import requests
 import json
 import re
-import os
 
 class SenderEncoder(json.JSONEncoder):
     def default(self, obj):
         return obj.__dict__
-
 
 class Sender:
     def __init__(self, rid):
@@ -35,9 +33,9 @@ class Sender:
         self.sender_initializer()
         header = {"authorization": self.authorization}
 
-        prompt = prompt.replace("_", " ")
-        prompt = " ".join(prompt.split())
-        prompt = re.sub(r"[^a-zA-Z0-9\s]+", "", prompt).strip()
+        # prompt = prompt.replace("_", " ")
+        # prompt = " ".join(prompt.split())
+        # prompt = re.sub(r"[^a-zA-Z0-9\s]+", "", prompt).strip()
         # prompt = prompt.lower()
 
         payload = {
@@ -73,8 +71,9 @@ class Sender:
 
         print("prompt [{}] successfully sent!".format(prompt))
         return prompt
-
-
+    
+# sender = Sender(50)
+# sender.send('a good man')
 # json <bound method Response.json of <Response [204]>>
 # text
 # content b''

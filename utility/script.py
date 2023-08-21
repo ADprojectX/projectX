@@ -1,12 +1,11 @@
 import json
-
-temp_script = """Narrator: "Welcome to today's videos, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+temp_script = """Narrator: "The Zeigarnik Effect states that people are more likely to remember uncompleted tasks than completed ones. This is because our brains have a natural tendency to focus on unfinished work, keeping it in our thoughts until it's completed."
 
 """
 """
+Narrator: "Welcome to today's videos, where we'll explore 15 psychological facts that will blow your mind. Let's dive right in!"
+
 Narrator: "Fact number 1: The Zeigarnik Effect."
-
-Narrator: "The Zeigarnik Effect states that people are more likely to remember uncompleted tasks than completed ones. This is because our brains have a natural tendency to focus on unfinished work, keeping it in our thoughts until it's completed."
 
 Narrator: "Fact number 2: The Halo Effect."
 
@@ -20,7 +19,7 @@ Narrator: "Fact number 4: The Bystander Effect."
 
 Narrator: "The Bystander Effect is a psychological phenomenon that occurs when multiple people witness an emergency situation but fail to intervene. This is because each individual assumes someone else will take action, leading to inaction by all."
 
-Narrator: "Fact number 5: The Mere Exposure Effect."
+Narrator: "Fact number 5: The Mere Exposure Effect." no samjanu bro
 
 Narrator: "The Mere Exposure Effect is a psychological phenomenon where people develop a preference for things they're exposed to repeatedly. Familiarity breeds liking, and we tend to favor things we've encountered before."
 
@@ -37,11 +36,12 @@ Narrator: "Fact number 8: Cognitive Dissonance."
 Narrator: "Cognitive Dissonance is the mental discomfort we experience when our actions, beliefs, or attitudes are inconsistent with each other. To resolve this discomfort, we often change our beliefs or attitudes to align with our actions."
 """
 
-img_desc = '''Image Description: A brain with gears turning inside
-'''
-'''
+
+img_desc = '''Image Description: A to-do list with some tasks checked off
+Image Description: A brain with gears turning inside
 Image Description: A woman struggling to remember an unfinished task
-Image Description: A to-do list with some tasks checked off
+'''
+'''
 Image Description: A person with a halo above their head
 Image Description: A group of people, with one person standing out due to their positive trait
 Image Description: A person whispering into another person's ear
