@@ -2,7 +2,20 @@ from moviepy.editor import *
 import tempfile
 # sys.path.append(os.path.join(os.getcwd()))#('/Users/ad_demon/Documents/GitHub/projectX/captions')
 from captions.align2 import align_audio_text
+import os
 
+dir_path = os.path.join(os.getcwd(),'temp')
+
+# Check if the directory exists
+if not os.path.exists(dir_path):
+    try:
+        # Create the directory
+        os.makedirs(dir_path)
+        print(f"Directory '{dir_path}' created successfully.")
+    except OSError as e:
+        print(f"Error creating directory '{dir_path}': {e}")
+else:
+    print(f"Directory '{dir_path}' already exists.")
 
 # FLAG FOR SWITCHING OFF CAPTIONS IF USER SELECTS HIDE CAPTION FOR PARTICULAR SCENE
 def generate_captions(video_file, audio_file, text):
@@ -30,13 +43,13 @@ def generate_captions(video_file, audio_file, text):
 
     final_video = CompositeVideoClip([video] + subtitles)
     # Create a temporary file to store the video output
-    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as temp_video_file:
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False, dir=dir_path) as temp_video_file:
         temp_video_path = temp_video_file.name
         final_video.write_videofile(temp_video_path, codec='libx264')
-        
+
     # Read the temporary video file as bytes-like object
     with open(temp_video_path, 'rb') as temp_file:
         video_data = temp_file.read()
-    
+
     print("Returning from generate captions")
     return video_data

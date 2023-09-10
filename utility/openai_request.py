@@ -16,10 +16,9 @@ def extract_narration(text):
     # The pattern looks for 'Narrator:' followed by any character (.) zero or more times (?)
     # until a double-quote is found. The non-greedy modifier '?' ensures we capture the shortest match.
     pattern = r'Narrator: ".*?"'
-    
+
     matches = re.findall(pattern, text)
     return '\n\n'.join(matches)
-
 
 def request_script(text):
     refresh_env()

@@ -16,6 +16,19 @@ from utility.aws_connector import *
 from tempfile import NamedTemporaryFile
 from time import time, sleep
 
+dir_path = os.path.join(os.getcwd(),'temp')
+
+# Check if the directory exists
+if not os.path.exists(dir_path):
+    try:
+        # Create the directory
+        os.makedirs(dir_path)
+        print(f"Directory '{dir_path}' created successfully.")
+    except OSError as e:
+        print(f"Error creating directory '{dir_path}': {e}")
+else:
+    print(f"Directory '{dir_path}' already exists.")
+
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
 @shared_task(name='sent_image_request', retry_backoff=0.5, serializer='json', queue='image_queue')
@@ -32,7 +45,7 @@ def sent_image_request(image_folder, sender_json, prompt, request_id):
 
         # try to create a task
         PendingTask.create_pending_task(request, prompt, image_folder)
-        
+
         # todo: check if PendingTask attempt was successful if not then retry sent_request until success
 
         # Perform the actual image processing only when PendingTask attempt above is successful and return the result
@@ -63,12 +76,12 @@ def captionated_video(assets, narration, imv_path):
     image_live = None
     video = None
     audio = None
-    
+
     for k, v in assets.items():
         if k == 'audio':
             while not check_file_exists(v):
                 sleep(60)
-                continue 
+                continue
             audio = get_file_from_s3(v)
         if k == 'image':
             start = time()
@@ -80,28 +93,28 @@ def captionated_video(assets, narration, imv_path):
             image = get_file_from_s3(v) if check_file_exists(v) else None
         if image == None:
             return
-    
+
     # Create temporary audio and image files
-    with NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio_file:
+    with NamedTemporaryFile(suffix=".wav", delete=False, dir=dir_path) as temp_audio_file:
         temp_audio_file.write(audio)
         temp_audio_file_path = temp_audio_file.name
-    
-    with NamedTemporaryFile(suffix=".jpg", delete=False) as temp_image_file:
+
+    with NamedTemporaryFile(suffix=".jpg", delete=False, dir=dir_path) as temp_image_file:
         temp_image_file.write(image)
         temp_image_file_path = temp_image_file.name
-    
+
     try:
         if image and audio and not image_live:
             image_live = create_vid(temp_audio_file_path, temp_image_file_path)
-        
+
         imv_scene = generate_captions(image_live, temp_audio_file_path, narration)
         upload_file_to_s3(imv_scene,imv_path)
         # Upload the final scene and other files to S3
-        
+
         # Clean up temporary files
         os.remove(temp_audio_file_path)
         os.remove(temp_image_file_path)
-    
+
     except Exception as e:
         # Clean up temporary files in case of an exception
         if os.path.exists(temp_audio_file_path):
@@ -114,7 +127,7 @@ def captionated_video(assets, narration, imv_path):
         #     while not check_file_exists(v):
         #         continue
         #     video = get_file_from_s3(v)
-    
+
 @shared_task(name='download_project', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
 def generate_final_project(assets, video_folder):
     clips = []
@@ -124,7 +137,7 @@ def generate_final_project(assets, video_folder):
         file_data = get_file_from_s3(url)
         if file_data:
             # Save to a temporary file
-            temp_file = NamedTemporaryFile(delete=False, suffix='.mp4')
+            temp_file = NamedTemporaryFile(delete=False, suffix='.mp4', dir=dir_path)
             temp_file.write(file_data)
             temp_file.close()
 
@@ -137,9 +150,8 @@ def generate_final_project(assets, video_folder):
         final_clip = concatenate_videoclips(clips)
 
         # Save the final_clip to a temporary file
-        output_temp_file = NamedTemporaryFile(delete=False, suffix='.mp4')
-        final_clip.write_videofile(output_temp_file.name)
-
+        output_temp_file = NamedTemporaryFile(delete=False, suffix='.mp4', dir=dir_path)
+        final_clip.write_videofile(output_temp_file.name, codec="libx264", audio_codec="aac")
         # Read the final_clip from the temporary file
         with open(output_temp_file.name, 'rb') as f:
             final_clip_data = f.read()
@@ -149,3 +161,4 @@ def generate_final_project(assets, video_folder):
 
         # Remove the temporary output file
         os.remove(output_temp_file.name)
+                                               

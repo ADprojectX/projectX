@@ -13,7 +13,7 @@ def refresh_env_variable():
     set_api_key(os.getenv("XI_SECRET_KEY"))
     all_voices = voices()
     return all_voices
-    
+
 
 def save_new_voice_samples():
     all_voices = refresh_env_variable()
@@ -27,8 +27,8 @@ def save_new_voice_samples():
             voice_path = voice_folder + f"/{voice.name}.mp3"
             with open(voice_path, "wb") as f:
                 f.write(audio)
-
     return voice_list
+
 
 def get_voice_samples():
     all_voices = refresh_env_variable()
@@ -39,14 +39,6 @@ def get_voice_samples():
             audio_data = audio_file.read()
         voice_list[voice.name] = audio_data
     return voice_list
-
-def save_voice_samples():
-    all_voices = refresh_env_variable()
-    for voice in all_voices:
-        audio = generate(text = "Explore a world of diverse voices with our captivating voice samples.", voice = voice)
-        voice_path = voice_folder + f"/{voice.name}.mp3"
-        with open(voice_path, "wb") as f:
-            f.write(audio)
 
 def convert_to_audio(voice_file, narration, voice_name):
     # Find the voice object based on the given voice_name

@@ -21,6 +21,7 @@ app.conf.task_routes = {
     'projectX.utility.tasks.sent_audio_request': {'queue': 'audio_queue'},
     'projectX.utility.tasks.captionated_video': {'queue': 'video_generator_queue'},
 }
+app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 # Limit the number of workers
 # Limit the number of workers for the limited_queue only
 # app.conf.worker_concurrency = {
@@ -28,7 +29,6 @@ app.conf.task_routes = {
 #     'default': 4,  # Set the desired concurrency for the default queue
 # }
 # Auto-discover tasks in all installed apps
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 # import os
 # from celery import Celery
   

@@ -53,7 +53,7 @@ class Sender:
                     {
                         "type": 3,
                         "name": "prompt",
-                        "value": str(prompt) + " " + self.flags,
+                        "value": str(prompt)# + " " + self.flags,
                     }
                 ],
                 "attachments": [],

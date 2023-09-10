@@ -11,9 +11,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import environ
 from pathlib import Path
-# import pymysql
-# pymysql.version_info = (2,3,0,"final",0)
-# pymysql.install_as_MySQLdb()
 from celery import Celery
 app = Celery('projectX')
 import os
@@ -40,7 +37,7 @@ SECRET_KEY = "django-insecure-^15zz1e&blym1irozsjlf_d=l*6_pg0w4wz6*1)go0&*x^en!n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "172.24.31.46"]
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -86,8 +83,10 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    'http://127.0.0.1:3000',
     "http://127.0.0.1:8000",
-    "http://172.24.31.46:3000"
+    "http://172.24.31.46:3000",
+    "http://24.46.177.68:3000"
 ]
 
 REST_FRAMEWORK = {
@@ -100,7 +99,7 @@ REST_FRAMEWORK = {
     # ],
 }
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 TEMPLATES = [
     {
@@ -164,6 +163,16 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['videogenerator.routers.MongoDBRouter']
+CELERY_BROKER_URL = 'pyamqp://guest:guest@localhost//'
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+
 # # Celery Configuration
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL
 # # CELERY_RESULT_BACKEND = 'django-db'
@@ -210,18 +219,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+# MEDIA_URL = "media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
     # last_modification_time = os.path.getmtime(env_file_path)
         # Adjust the interval as needed
 # DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-# AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME")
-AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-# AWS_QUERYSTRING_EXPIRE = 600
-AWS_S3_CUSTOM_DOMAIN = env('AWS_CLOUDFRONT_DOMAIN')
-AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
-AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
+# # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+# # AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME")
+# AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+# # AWS_QUERYSTRING_EXPIRE = 600
+# AWS_S3_CUSTOM_DOMAIN = env('AWS_CLOUDFRONT_DOMAIN')
+# AWS_CLOUDFRONT_KEY_ID = env.str('AWS_CLOUDFRONT_KEY_ID').strip()
+# AWS_CLOUDFRONT_KEY = env.str('AWS_CLOUDFRONT_KEY', multiline=True).encode('ascii').strip()
+
+# import pymysql
+# pymysql.version_info = (2,3,0,"final",0)
+# pymysql.install_as_MySQLdb()

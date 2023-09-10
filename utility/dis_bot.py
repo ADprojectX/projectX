@@ -13,6 +13,12 @@ from decouple import config
 
 client = commands.Bot(command_prefix="*", intents=discord.Intents.all())
 
+params = [
+    "aspect", "ar", "chaos", "fast", "iw", "no", "quality", "q",
+    "relax", "repeat", "r", "seed", "sameseed", "stop", "style",
+    "stylize", "s", "tile", "Turbo", "Weird", "niji", "version", "v"
+]
+
 def refresh_env(key):
     load_dotenv(override = True)
     return os.getenv(key)
@@ -56,7 +62,6 @@ def split_image(image_file):
         top_right = im.crop((mid_x, 0, width, mid_y))
         bottom_left = im.crop((0, mid_y, mid_x, height))
         bottom_right = im.crop((mid_x, mid_y, width, height))
-
         return top_left, top_right, bottom_left, bottom_right
 
 
@@ -74,30 +79,14 @@ async def download_image(url, filename, prompt):
         # Check if the input folder exists, and create it if necessary
         None if os.path.exists(input_folder) else os.makedirs(input_folder)
         # print(prompt, ext, 'demodummy')
-
+        
         with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as temp_file:
             temp_file.write(response.content)
             temp_file_path = temp_file.name
-
-        print(f"Image downloaded: {prompt}")
-
-        if "UPSCALED_" not in filename:
-            # file_prefix = prompt.replace(" ", '_').lower()
-            top_left, top_right, bottom_left, bottom_right = split_image(temp_file_path)
-            # i = count_files_in_s3_folder(output_folder)
-            i = 0
-            upload_image_to_s3(top_left, f"{output_folder}_option{i+1}.jpg")
-            upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
-            upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
-            upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
-
-        db.delete_pending_task(prompt)
-        os.remove(temp_file_path)
-
-
+            
 # @tasks.loop(minutes=15)  # Adjust the interval as needed
 # async def update_presence():
-#     await client.change_presence(activity=discord.Game(name="Staying Active"))
+# await client.change_presence(activity=discord.Game(name="Staying Active"))
 
 @client.event
 async def on_ready():
@@ -111,7 +100,14 @@ async def on_message(message):
         # **a group of people with one person standing out due to their positive trait** - <@709717610530340895> (fast)
         result = re.search(r"\*\*(.*?)\*\*", message.content)
         if result:
-            prompt = result.group(1)[:-6]
+            prompt = result.group(1)
+            params_pattern = "|".join(params)
+            pattern = r"(.*?)(?=--(" + params_pattern + r")(\s|$))"
+            result = re.search(pattern, prompt)
+            if result:
+                prompt=result.group(1)
+
+            prompt = prompt.strip()
             print(prompt)
         else:
             print("No match found.")
@@ -124,6 +120,7 @@ async def on_message(message):
 
 
 client.run(refresh_env("DISCORD_BOT_TOKEN"))
+
 
 # <Message id=1102464819505942590 channel=<TextChannel id=1102068352932909158 name='general' position=0 nsfw=False news=False category_id=1102068352932909156>
 # type=<MessageType.default: 0> author=<Member id=936929561302675456 name='Midjourney Bot' discriminator='9282' bot=True nick=None
