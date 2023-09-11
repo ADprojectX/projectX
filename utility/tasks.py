@@ -80,13 +80,13 @@ def captionated_video(assets, narration, imv_path):
     for k, v in assets.items():
         if k == 'audio':
             while not check_file_exists(v):
-                sleep(60)
+                sleep(30)
                 continue
             audio = get_file_from_s3(v)
         if k == 'image':
             start = time()
             while not check_file_exists(v):
-                sleep(60)
+                sleep(30)
                 if time() - start > 2400:
                     break
                 continue
