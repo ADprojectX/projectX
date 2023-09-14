@@ -13,6 +13,7 @@ from utility.text_to_audio import get_voice_samples
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
+
 @api_view(['POST'])
 def create_request(request):
     fireid = request.data.get('fireid')
@@ -88,6 +89,34 @@ def save_script(request):
             return Response({'error': 'Invalid JSON format in finalScene parameter'}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'error': 'finalScene or reqid parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def generate_image(request):
+    try:
+        reqid = request.GET.get('reqid')
+        sceneid = request.GET.get('sceneid')
+        prompt = request.GET.get('prompt')
+        service = request.GET.get('service')
+
+        request = Request.objects.get(id=reqid)
+        scene = Scene.objects.get(id=sceneid)
+        request_path = path_to_request(request)
+        print('all good', 'sceneid', sceneid)
+
+        # You should handle exceptions related to generate_additional_image
+        generate_additional_image(prompt, service, scene, request_path, request)
+
+        return Response(status=status.HTTP_200_OK)
+
+    except ValueError as ve:
+        # Handle a ValueError exception, if raised
+        return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+    except Scene.DoesNotExist:
+        # Handle a Scene.DoesNotExist exception, if raised
+        return Response({'error': 'Scene not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Handle any other exceptions that may occur
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["GET"])    
 def download_project(request):
@@ -178,7 +207,7 @@ def get_thumbnail_images(request):
             try:
                 scene_obj = Scene.objects.get(id=scene)
                 project_asset = ProjectAssets.objects.get(scene_id=scene_obj).currently_used_asset
-                image = project_asset.get('image')
+                image = project_asset.get('image')[0]
 
                 if image:
                     cloudfront_url = cdn_path(image)

@@ -110,6 +110,15 @@ class ProjectAssets(models.Model):
             self.currently_used_asset[k] = v
         self.save()
 
+    def add_asset(self, **kwargs):
+        # script = self.get_scene_object().get_script_id()
+        # req = Request.objects.get(id=str(script))
+        if self.asset_path is None:
+            self.asset_path = {}
+        for k, v in kwargs.items():
+            self.asset_path.setdefault(k, []).append(v)
+        self.save()
+
 class PendingTask(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     prompt = models.TextField(max_length=1000)  # Set a key length for the unique index

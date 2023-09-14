@@ -90,9 +90,9 @@ async def download_image(url, filename, prompt):
             # i = count_files_in_s3_folder(output_folder)
             i = 0
             upload_image_to_s3(top_left, f"{output_folder}_option{i+1}.jpg")
-            upload_image_to_s3(top_right, f"{output_folder}_option{i+2}.jpg")
-            upload_image_to_s3(bottom_left, f"{output_folder}_option{i+3}.jpg")
-            upload_image_to_s3(bottom_right, f"{output_folder}_option{i+4}.jpg")
+            upload_image_to_s3(top_right, f"{output_folder}/extras/_option{i+2}.jpg")
+            upload_image_to_s3(bottom_left, f"{output_folder}/extras/_option{i+3}.jpg")
+            upload_image_to_s3(bottom_right, f"{output_folder}/extras/_option{i+4}.jpg")
 
         db.delete_pending_task(prompt)
         os.remove(temp_file_path)

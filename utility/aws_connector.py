@@ -17,6 +17,16 @@ def get_env_variables(key):
 
 s3 = boto3.client('s3', aws_access_key_id=get_env_variables('AWS_ACCESS_KEY_ID'), aws_secret_access_key=get_env_variables('AWS_SECRET_ACCESS_KEY'))
 
+def is_s3_directory_empty(directory_path):
+    # List objects in the specified S3 prefix (directory)
+    response = s3.list_objects_v2(Bucket=get_env_variables('AWS_STORAGE_BUCKET_NAME'), Prefix=directory_path)
+
+    # Check if there are no objects in the directory
+    if 'Contents' in response:
+        return len(response['Contents']) == 0
+    else:
+        return True 
+
 def check_file_exists(image_key):
     try:
         # Check if the image exists in the specified bucket
