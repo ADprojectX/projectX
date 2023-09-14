@@ -101,12 +101,17 @@ def generate_image(request):
         request = Request.objects.get(id=reqid)
         scene = Scene.objects.get(id=sceneid)
         request_path = path_to_request(request)
-        print('all good', 'sceneid', sceneid)
 
         # You should handle exceptions related to generate_additional_image
-        generate_additional_image(prompt, service, scene, request_path, request)
+        img_url = generate_additional_image(prompt, service, scene, request_path, request)
+        cloudfront_url = cdn_path(img_url)
+        # Create a dictionary with the response data, including the CloudFront URL
+        response_data = {
+            'message': 'Image generated successfully',
+            'cloudfront_url': cloudfront_url,
+        }
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     except ValueError as ve:
         # Handle a ValueError exception, if raised

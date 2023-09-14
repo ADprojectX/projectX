@@ -75,7 +75,7 @@ def generate_additional_image(prompt, img_service, scene, path, request):
     sender_json = sender.to_json()
     image_file = image_folder + f"/{scene.id}/{img_id}"
     asset, _ = ProjectAssets.objects.update_or_create(scene_id=scene)
-    
+
     if img_service == 'sdxl':
         image_file = image_file+".jpg"
         asset.add_asset(image = [image_file, scene.image_desc])
@@ -89,8 +89,8 @@ def generate_additional_image(prompt, img_service, scene, path, request):
             # pass
         asset.add_asset(image = [image_file+f"_option1.jpg", scene.image_desc])
         sent_mj_image_request.delay(image_file, sender_json, prompt, request.id)
-
-    return
+        image_file = image_file+f"_option1.jpg"
+    return image_file
 
 def generate_final_video(script, request_path, req):
     video_assets = []
