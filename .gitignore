@@ -15,6 +15,7 @@ accounts/__pycache__/
 captions/
 lib/
 man/
+temp/
 reference/
 firebase-projectx.json
 videogenerator/migrations/

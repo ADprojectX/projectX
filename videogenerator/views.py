@@ -74,7 +74,7 @@ def save_script(request):
             script.add_entire_script(initial_script)
             
             request_path = path_to_request(req)
-            generate_initial_assets(req, script.current_scenes, request_path, 'mjx')
+            generate_initial_assets(req, script.current_scenes, request_path)
 
             if not created:
                 return Response({'success': True})

@@ -1,6 +1,15 @@
 import requests
 import json
-import re
+from dotenv import load_dotenv
+import os
+import base64
+from utility.aws_connector import upload_file_to_s3
+
+def refresh_env(key):
+    load_dotenv(override = True)
+    return os.getenv(key)
+
+sdxl_text_to_image_url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
 
 class SenderEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -15,7 +24,56 @@ class Sender:
         # Serialize the Sender object to a JSON string using the custom encoder
         return json.dumps(self, cls=SenderEncoder)
 
-    def sender_initializer(self):
+    def sdxl_sender_initializer(self, *args, **kwargs):
+        with open("sdxl_params.json", "r") as json_file:
+            params = json.load(json_file)
+        self.steps = kwargs.get("steps", params.get("steps"))
+        print(self.steps)
+        self.width = kwargs.get("width", params.get("width"))
+        self.height = kwargs.get("height", params.get("height"))
+        self.seed = kwargs.get("seed", params.get("seed"))
+        self.cfg_scale = kwargs.get("cfg_scale", params.get("cfg_scale"))
+        self.samples = kwargs.get("samples", params.get("samples"))
+            
+
+    def sdxl_sender(self,prompt,*args, **kwargs):
+        self.sdxl_sender_initializer(**kwargs)
+        body = {
+                "steps": self.steps,
+                "width": self.width,
+                "height": self.height,
+                "seed": self.seed,
+                "cfg_scale": self.cfg_scale,
+                "samples": self.samples,
+                "text_prompts": [
+                    {
+                    "text": prompt,
+                    "weight": 1
+                    },
+                    {
+                    "text": "blurry, bad",
+                    "weight": -1
+                    }
+                    ],
+                }
+        headers = {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "Authorization": refresh_env("SDXL_API_KEY"),
+                    }
+        response = requests.post(
+                                sdxl_text_to_image_url,
+                                headers=headers,
+                                json=body,
+                                )
+        if response.status_code != 200:
+            raise Exception("Non-200 response: " + str(response.text))
+
+        data = response.json()
+        return data
+        
+
+    def discord_sender_initializer(self):
         with open("sender_params.json", "r") as json_file:
             params = json.load(json_file)
 
@@ -29,8 +87,8 @@ class Sender:
         self.flags = params["flags"]
 
 
-    def send(self, prompt):
-        self.sender_initializer()
+    def discord_sender(self, prompt):
+        self.discord_sender_initializer()
         header = {"authorization": self.authorization}
 
         # prompt = prompt.replace("_", " ")

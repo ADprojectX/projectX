@@ -15,6 +15,9 @@ from time import sleep
 from utility.aws_connector import *
 from tempfile import NamedTemporaryFile
 from time import time, sleep
+from utility import openai_request as osr
+from django.core import serializers
+import base64
 
 dir_path = os.path.join(os.getcwd(),'temp')
 
@@ -31,8 +34,8 @@ else:
 
 # retry_backoff should be a random and different integer for each instance to avoid eventual conflict
 logger = get_task_logger(__name__)
-@shared_task(name='sent_image_request', retry_backoff=0.5, serializer='json', queue='image_queue')
-def sent_image_request(image_folder, sender_json, prompt, request_id):
+@shared_task(name='sent_mj_image_request', retry_backoff=0.5, serializer='json', queue='mj_queue')
+def sent_mj_image_request(image_folder, sender_json, prompt, request_id):
     try:
         # Check if the buffer has less than 12 entries before proceeding
         while not PendingTask.has_less_than_buffer_entries():
@@ -60,7 +63,7 @@ def sent_image_request(image_folder, sender_json, prompt, request_id):
     except Exception as e:
         # Log the exception and retry the task if it's a retryable error
         logger.error(f"Error processing the request: {e}")
-        raise sent_image_request.retry(exc=e)  # Automatically retry the task
+        raise sent_mj_image_request.retry(exc=e)  # Automatically retry the task
 
 @shared_task(name='sent_audio_request', retry_backoff=1.1, serializer='json', queue='audio_queue')
 def sent_audio_request(audio_folder, narration, voice):
@@ -76,17 +79,17 @@ def captionated_video(assets, narration, imv_path):
     image_live = None
     video = None
     audio = None
-
     for k, v in assets.items():
         if k == 'audio':
             while not check_file_exists(v):
                 sleep(30)
                 continue
             audio = get_file_from_s3(v)
+            
         if k == 'image':
             start = time()
             while not check_file_exists(v):
-                sleep(30)
+                sleep(10)
                 if time() - start > 2400:
                     break
                 continue
@@ -98,17 +101,17 @@ def captionated_video(assets, narration, imv_path):
     with NamedTemporaryFile(suffix=".wav", delete=False, dir=dir_path) as temp_audio_file:
         temp_audio_file.write(audio)
         temp_audio_file_path = temp_audio_file.name
-
+    
     with NamedTemporaryFile(suffix=".jpg", delete=False, dir=dir_path) as temp_image_file:
         temp_image_file.write(image)
         temp_image_file_path = temp_image_file.name
-
+    
     try:
         if image and audio and not image_live:
             image_live = create_vid(temp_audio_file_path, temp_image_file_path)
-
         imv_scene = generate_captions(image_live, temp_audio_file_path, narration)
         upload_file_to_s3(imv_scene,imv_path)
+        
         # Upload the final scene and other files to S3
 
         # Clean up temporary files
@@ -122,11 +125,6 @@ def captionated_video(assets, narration, imv_path):
         if os.path.exists(temp_image_file_path):
             os.remove(temp_image_file_path)
         raise e
-
-        # if k == 'video' and not video:
-        #     while not check_file_exists(v):
-        #         continue
-        #     video = get_file_from_s3(v)
 
 @shared_task(name='download_project', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
 def generate_final_project(assets, video_folder):
@@ -161,4 +159,25 @@ def generate_final_project(assets, video_folder):
 
         # Remove the temporary output file
         os.remove(output_temp_file.name)
-                                               
+
+@shared_task(name='sent_sdxl_image_request', retry_backoff=1.1, serializer='json', queue='sdxl_queue')
+def sent_sdxl_image_request(image_folder, sender_json, prompt, serialized_scene):
+    sender = Sender(**json.loads(sender_json))
+    prompt = prompt.lower().strip()
+    # Deserialize the serialized_scene back to a Scene object
+    scene = serializers.deserialize("json", serialized_scene, ignorenonexistent=True)
+    while True:
+        try:
+            data = sender.sdxl_sender(prompt)
+            for i, image in enumerate(data["artifacts"]):
+                file_data = base64.b64decode(image["base64"])
+                upload_file_to_s3(file_data, image_folder)
+            break
+        except Exception as e:
+            if "Invalid prompts detected" in str(e):
+                logger.error("prompt:",prompt,"\nRetrying after encountering 'Invalid prompts detected' error.")
+                prompt = osr.regenerate_image_description(prompt)
+                scene.image_desc = prompt  # Update the scene's image_desc
+                scene.save() 
+            else:
+                raise

@@ -11,15 +11,17 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 task_queues = (
     Queue('audio_queue', priority=2,max_priority=2),
-    Queue('image_queue', priority=10,max_priority=10),
+    Queue('mj_queue', priority=10,max_priority=10),
     Queue('video_generator_queue'),
+    Queue('sdxl_queue', priority=10,max_priority=10)
     # Add other queues here if needed
 )
 # Set the custom queue for the task
 app.conf.task_routes = {
-    'projectX.utility.tasks.sent_image_request': {'queue': 'image_queue'},
+    'projectX.utility.tasks.sent_mj_image_request': {'queue': 'mj_queue'},
     'projectX.utility.tasks.sent_audio_request': {'queue': 'audio_queue'},
     'projectX.utility.tasks.captionated_video': {'queue': 'video_generator_queue'},
+    'projectX.utility.tasks.sent_sdxl_image_request': {'queue': 'sdxl_queue'},
 }
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 # Limit the number of workers

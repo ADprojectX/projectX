@@ -1,2 +1,3 @@
 def convert_to_image(sender, prompt):
-    sender.send(prompt)
+    sender.discord_sender(prompt)
+

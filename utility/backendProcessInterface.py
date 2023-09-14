@@ -3,9 +3,10 @@ import os
 from utility.sender import Sender
 import uuid
 from videogenerator.models import ProjectAssets, Scene, Request
-from utility.tasks import sent_image_request, sent_audio_request, captionated_video, generate_final_project
+from utility.tasks import sent_mj_image_request, sent_audio_request, captionated_video, generate_final_project, sent_sdxl_image_request
 from utility.aws_connector import cdn_path
 from rest_framework.response import Response
+from django.core import serializers
 
 def process_scenes(request):
     topic = request.data.get('topic')
@@ -32,7 +33,7 @@ def path_to_asset(*args, **kwargs):
         sub_path+=arg+'/'
     return sub_path[:-1] if sub_path else None
     
-def generate_initial_assets(request, script, path, img_service, *args, **kwargs):
+def generate_initial_assets(request, script, path, img_service='sdxl', *args, **kwargs):
     sender = Sender(str(request.id))
     sender_json = sender.to_json()
     image_asset = path_to_asset('image',img_service)
@@ -49,11 +50,21 @@ def generate_initial_assets(request, script, path, img_service, *args, **kwargs)
         voice_file = audio_folder + f"/{scene_id}/{request.voice}/0.mp3"
         im_video_file = im_video_folder + f"/{scene_id}/{img_service}_{request.voice}.mp4"
         
-        asset.add_new_asset(image = image_file+f"_option1.jpg", audio = voice_file, intermediate_video = im_video_file)
         # # add celery chain
-        sent_image_request.delay(image_file, sender_json, scene.image_desc, request.id)
+        if img_service == 'mjx':
+            asset.add_new_asset(image = image_file+f"_option1.jpg", audio = voice_file, intermediate_video = im_video_file)
+            sent_mj_image_request.delay(image_file, sender_json, scene.image_desc, request.id)
+            image_file = image_file+f"_option1.jpg"
+        else:
+            # Serialize the Scene object
+            image_file = image_file+".jpg"
+            asset.add_new_asset(image = image_file, audio = voice_file, intermediate_video = im_video_file)
+            serialized_scene = serializers.serialize("json", [scene])
+            sent_sdxl_image_request.delay(image_file, sender_json, scene.image_desc, serialized_scene)
+
         sent_audio_request.delay(voice_file, scene.narration, request.voice if request.voice else 'Adam')
-        captionated_video.delay({"image":image_file+f"_option1.jpg", "audio":voice_file}, scene.narration, im_video_file)
+        
+        captionated_video.delay({"image":image_file, "audio":voice_file}, scene.narration, im_video_file)
 
 
 def generate_final_video(script, request_path, req):

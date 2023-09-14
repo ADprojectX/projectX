@@ -94,3 +94,37 @@ def request_image_descriptions(narration, title):
         return image_description
 
 # dotenv_path = os.path.join(os.getcwd(), ".env")
+def regenerate_image_description(desc):
+    prompt= f"""
+        I am giving you this image description to put in Stable Diffusion model to get image generated.
+        However this is very very sensitive or banned words for the model. I want you to make the image description non-sensitve (non-banned) and use very mild description which could be used by stable diffusion model
+
+        image desc: "{desc}"
+
+        Please strictly follow the below format, do not include anything else in the response. You need to provide what is asked in the square bracket below.
+
+        Just give me the response as below. No other things in the response
+
+        ​Image Description: [exact text to send to image generation tool]
+    """
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=2000
+    )
+    
+    image_description = response["choices"][0]["message"]["content"]
+    print(f"Refined Image Desc:  \n \n '{image_description}'.")
+    pattern = r'Image Description: [\'"]?(.*?)[\'"]?(?=\.$|$)'
+    # pattern = r"Image Description: \[(.*?)\]"
+    match = re.search(pattern, image_description)
+    if match:
+        result = match.group(1).strip().replace("  ", " ")
+        result = re.sub(r'^[\'"]|[\'"]$', '', result)
+        result = re.sub(r'\s+', ' ', result)
+        print(f"The script for given topic: \n \n '{result}'.")
+        return result
+    else:
+        print(f"The script for given topic is \n \n '{image_description}'.")
+        return image_description
