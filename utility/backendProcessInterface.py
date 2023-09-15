@@ -78,7 +78,7 @@ def generate_additional_image(prompt, img_service, scene, path, request):
 
     if img_service == 'sdxl':
         image_file = image_file+".jpg"
-        asset.add_asset(image = [image_file, scene.image_desc])
+        asset.add_asset(image = [image_file, prompt])
         serialized_scene = serializers.serialize("json", [scene])
         sent_sdxl_image_request.delay(image_file, sender_json, prompt, serialized_scene)
     elif img_service == 'mjx':
@@ -87,7 +87,7 @@ def generate_additional_image(prompt, img_service, scene, path, request):
             # asset.add_asset(image = image_file+f"_option1.jpg")
             # sent_mj_image_request.delay(image_file, sender_json, scene.image_desc, reqid)
             # pass
-        asset.add_asset(image = [image_file+f"_option1.jpg", scene.image_desc])
+        asset.add_asset(image = [image_file+f"_option1.jpg", prompt])
         sent_mj_image_request.delay(image_file, sender_json, prompt, request.id)
         image_file = image_file+f"_option1.jpg"
     return image_file
