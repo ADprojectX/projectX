@@ -230,7 +230,6 @@ class SceneAssetView(APIView):
     def get(self, request):
         try:
             sceneid = request.GET.get('sceneid')
-            print(sceneid, 'xxx')
             scene_obj = Scene.objects.get(id=sceneid)
             scene_asset = ProjectAssets.objects.get(scene_id=scene_obj).asset_path
             
