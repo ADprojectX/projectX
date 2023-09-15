@@ -11,4 +11,5 @@ urlpatterns = [
     path('get-thumbnails/', views.get_thumbnail_images, name='get_thumbnails'),
     path('download-project/', views.download_project, name='download_project'),
     path('generate-image/', views.generate_image, name='generate_image'),
+    path('get-scene-image-assets/', views.SceneAssetView.as_view(), name='get_scene_image_assets'),
 ]

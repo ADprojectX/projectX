@@ -4,6 +4,7 @@ from .models import Request, Script, ProjectAssets, Scene
 from utility.aws_connector import cdn_path
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
+from rest_framework.views import APIView
 from accounts.models import User
 import os
 import base64
@@ -12,7 +13,6 @@ from utility.backendProcessInterface import *
 from utility.text_to_audio import get_voice_samples
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
-
 
 @api_view(['POST'])
 def create_request(request):
@@ -90,39 +90,6 @@ def save_script(request):
     else:
         return Response({'error': 'finalScene or reqid parameter not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-def generate_image(request):
-    try:
-        reqid = request.GET.get('reqid')
-        sceneid = request.GET.get('sceneid')
-        prompt = request.GET.get('prompt')
-        service = request.GET.get('service')
-
-        request = Request.objects.get(id=reqid)
-        scene = Scene.objects.get(id=sceneid)
-        request_path = path_to_request(request)
-
-        # You should handle exceptions related to generate_additional_image
-        img_url = generate_additional_image(prompt, service, scene, request_path, request)
-        cloudfront_url = cdn_path(img_url)
-        # Create a dictionary with the response data, including the CloudFront URL
-        response_data = {
-            'message': 'Image generated successfully',
-            'cloudfront_url': cloudfront_url,
-        }
-
-        return Response(response_data, status=status.HTTP_200_OK)
-
-    except ValueError as ve:
-        # Handle a ValueError exception, if raised
-        return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
-    except Scene.DoesNotExist:
-        # Handle a Scene.DoesNotExist exception, if raised
-        return Response({'error': 'Scene not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        # Handle any other exceptions that may occur
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 @api_view(["GET"])    
 def download_project(request):
     try:
@@ -136,7 +103,7 @@ def download_project(request):
         cdn_url = generate_final_video(script.current_scenes, request_path, req)
         return Response({'final_video': cdn_url})
     except Exception as e:
-        pass
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 #geturlfromsceneID
 
 @api_view(['GET'])
@@ -224,9 +191,58 @@ def get_thumbnail_images(request):
         return Response({'asset_urls': asset_urls})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
-    
 
 
+@api_view(['GET'])
+def generate_image(request):
+    try:
+        reqid = request.GET.get('reqid')
+        sceneid = request.GET.get('sceneid')
+        prompt = request.GET.get('prompt')
+        service = request.GET.get('service')
+
+        request = Request.objects.get(id=reqid)
+        scene = Scene.objects.get(id=sceneid)
+        request_path = path_to_request(request)
+
+        # You should handle exceptions related to generate_additional_image
+        img_url = generate_additional_image(prompt, service, scene, request_path, request)
+        cloudfront_url = cdn_path(img_url)
+        # Create a dictionary with the response data, including the CloudFront URL
+        response_data = {
+            'message': 'Image generated successfully',
+            'cloudfront_url': cloudfront_url,
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except ValueError as ve:
+        # Handle a ValueError exception, if raised
+        return Response({'error': str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+    except Scene.DoesNotExist:
+        # Handle a Scene.DoesNotExist exception, if raised
+        return Response({'error': 'Scene not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        # Handle any other exceptions that may occur
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class SceneAssetView(APIView):
+    def get(self, request):
+        try:
+            sceneid = request.GET.get('sceneid')
+            print(sceneid, 'xxx')
+            scene_obj = Scene.objects.get(id=sceneid)
+            scene_asset = ProjectAssets.objects.get(scene_id=scene_obj).asset_path
+            
+            image_list = [[cdn_path(imageAsset[0]), imageAsset[1]] for imageAsset in scene_asset['image']]
+            
+            return Response({'image_list': image_list}, status=status.HTTP_200_OK)
+        except Scene.DoesNotExist:
+            return Response({'error': 'Scene not found'}, status=status.HTTP_404_NOT_FOUND)
+        except ProjectAssets.DoesNotExist:
+            return Response({'error': 'ProjectAssets not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # @api_view(["GET"])
 # def set_voice(request):
 #     req_id = request.GET.get('reqid')
