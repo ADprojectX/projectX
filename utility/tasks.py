@@ -5,6 +5,7 @@ from elevenlabs.api.error import APIError
 from utility.text_to_image import convert_to_image
 from utility.text_to_audio import convert_to_audio
 from utility.sender import Sender
+from celery.exceptions import MaxRetriesExceededError
 from utility.create_video import create_vid
 from utility.generate_caption import generate_captions
 from videogenerator.models import PendingTask
@@ -18,6 +19,7 @@ from time import time, sleep
 from utility import openai_request as osr
 from django.core import serializers
 import base64
+import requests
 
 dir_path = os.path.join(os.getcwd(),'temp')
 
@@ -65,13 +67,32 @@ def sent_mj_image_request(image_folder, sender_json, prompt, request_id):
         logger.error(f"Error processing the request: {e}")
         raise sent_mj_image_request.retry(exc=e)  # Automatically retry the task
 
+# @shared_task(
+#     name='sent_audio_request',
+#     retry_backoff=1.1,
+#     serializer='json',
+#     queue='audio_queue',
+#     autoretry_for=(Exception,),  # Retry for any exception
+#     retry_kwargs={'max_retries': None}  # Retry indefinitely
+# )
+# def sent_audio_request(audio_folder, narration, voice):
+#     try:
+#         convert_to_audio(audio_folder, narration, voice)
+#     except Exception as e:
+#         # Log the error
+#         logger.error(f"Exception: {e}")
+#         # Raise MaxRetriesExceededError to indicate indefinite retries
+#         raise MaxRetriesExceededError()
 @shared_task(name='sent_audio_request', retry_backoff=1.1, serializer='json', queue='audio_queue')
 def sent_audio_request(audio_folder, narration, voice):
     try:
         convert_to_audio(audio_folder, narration, voice)
     except APIError as e:
         # Retry the task when the APIError occurs
-        current_task.retry(exc=e)
+        raise sent_audio_request.retry(exc=e)
+    except Exception as e:
+        # Retry the task when any other exception occurs
+        raise sent_audio_request.retry(exc=e)
 
 @shared_task(name='captionated_video', retry_backoff=1.1, serializer='json', queue='video_generator_queue')
 def captionated_video(assets, narration, imv_path):
@@ -172,6 +193,7 @@ def sent_sdxl_image_request(image_folder, sender_json, prompt, serialized_scene)
             for i, image in enumerate(data["artifacts"]):
                 file_data = base64.b64decode(image["base64"])
                 upload_file_to_s3(file_data, image_folder)
+                # notify_django_completion_status(image_folder)
             break
         except Exception as e:
             if "Invalid prompts detected" in str(e):
@@ -179,5 +201,15 @@ def sent_sdxl_image_request(image_folder, sender_json, prompt, serialized_scene)
                 prompt = osr.regenerate_image_description(prompt)
                 scene.image_desc = prompt  # Update the scene's image_desc
                 scene.save() 
+                raise sent_sdxl_image_request.retry(exc=e)
             else:
-                raise
+                raise sent_sdxl_image_request.retry(exc=e)
+
+@shared_task(name='add', retry_backoff=1, serializer='json', queue='sdxl_queue')
+def add(a,b,sec):
+    sleep(sec)
+    return(a+b)
+
+@shared_task(name='add', retry_backoff=1, serializer='json', queue='sdxl_queue')
+def request_tracker():
+    return

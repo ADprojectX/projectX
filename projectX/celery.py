@@ -4,7 +4,7 @@ import os
 from kombu import Queue
 
 # Create a Celery app object
-app = Celery('projectX')
+app = Celery('projectX', backend ='django-db')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "projectX.settings")
 # Load the Celery settings from Django settings
 app.config_from_object('django.conf:settings', namespace='CELERY')
@@ -13,7 +13,8 @@ task_queues = (
     Queue('audio_queue', priority=2,max_priority=2),
     Queue('mj_queue', priority=10,max_priority=10),
     Queue('video_generator_queue'),
-    Queue('sdxl_queue', priority=10,max_priority=10)
+    Queue('sdxl_queue', priority=5,max_priority=5),
+    Queue('request_queue'),
     # Add other queues here if needed
 )
 # Set the custom queue for the task
@@ -22,6 +23,7 @@ app.conf.task_routes = {
     'projectX.utility.tasks.sent_audio_request': {'queue': 'audio_queue'},
     'projectX.utility.tasks.captionated_video': {'queue': 'video_generator_queue'},
     'projectX.utility.tasks.sent_sdxl_image_request': {'queue': 'sdxl_queue'},
+    'projectX.utility.tasks.request_tracker': {'queue': 'request_queue'},
 }
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 # Limit the number of workers

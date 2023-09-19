@@ -28,7 +28,6 @@ class Sender:
         with open("sdxl_params.json", "r") as json_file:
             params = json.load(json_file)
         self.steps = kwargs.get("steps", params.get("steps"))
-        print(self.steps)
         self.width = kwargs.get("width", params.get("width"))
         self.height = kwargs.get("height", params.get("height"))
         self.seed = kwargs.get("seed", params.get("seed"))

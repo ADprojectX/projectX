@@ -32,8 +32,28 @@ def path_to_asset(*args, **kwargs):
     for arg in args:
         sub_path+=arg+'/'
     return sub_path[:-1] if sub_path else None
+
     
+class CreditSolver:
+
+    def subscription_mapper(self,):
+        pass
+
+    def credit_calculator(self,):
+        pass
+
+class RequestTracker:
+    def __init__(self):
+        self.processList = []
+
+    def add_process(self,process):
+        self.processList.append(process)
+    
+    def status_checker(self):
+        pass
+
 def generate_initial_assets(request, script, path, img_service='sdxl', *args, **kwargs):
+    process = RequestTracker()
     image_asset = path_to_asset('image',img_service)
     voice_asset = path_to_asset('audio','XIL')
     im_video_asset = path_to_asset('intermediate_video', f"{img_service}_XIL")
@@ -54,18 +74,18 @@ def generate_initial_assets(request, script, path, img_service='sdxl', *args, **
         # # add celery chain
         if img_service == 'mjx':
             asset.add_new_asset(image = [image_file+f"_option1.jpg", scene.image_desc], audio = voice_file, intermediate_video = im_video_file)
-            sent_mj_image_request.delay(image_file, sender_json, scene.image_desc, request.id)
+            process.add_process(sent_mj_image_request.delay(image_file, sender_json, scene.image_desc, request.id))
             image_file = image_file+f"_option1.jpg"
         else:
             # Serialize the Scene object
             image_file = image_file+".jpg"
             asset.add_new_asset(image = [image_file, scene.image_desc], audio = voice_file, intermediate_video = im_video_file)
             serialized_scene = serializers.serialize("json", [scene])
-            sent_sdxl_image_request.delay(image_file, sender_json, scene.image_desc, serialized_scene)
+            process.add_process(sent_sdxl_image_request.delay(image_file, sender_json, scene.image_desc, serialized_scene))
 
-        sent_audio_request.delay(voice_file, scene.narration, request.voice if request.voice else 'Adam')
+        process.add_process(sent_audio_request.delay(voice_file, scene.narration, request.voice if request.voice else 'Adam'))
         
-        captionated_video.delay({"image":image_file, "audio":voice_file}, scene.narration, im_video_file)
+        process.add_process(captionated_video.delay({"image":image_file, "audio":voice_file}, scene.narration, im_video_file))
 
 def generate_additional_image(prompt, img_service, scene, path, request):
     image_asset = path_to_asset('image',img_service)
@@ -81,6 +101,7 @@ def generate_additional_image(prompt, img_service, scene, path, request):
         asset.add_asset(image = [image_file, prompt])
         serialized_scene = serializers.serialize("json", [scene])
         sent_sdxl_image_request.delay(image_file, sender_json, prompt, serialized_scene)
+        print('here')
     elif img_service == 'mjx':
         #check if extras have other images available
         # if is_s3_directory_empty(image_folder+f"/{scene.id}/extras/"):

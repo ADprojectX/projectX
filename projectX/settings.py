@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import environ
 from pathlib import Path
 from celery import Celery
-app = Celery('projectX')
+app = Celery('projectX', backend='django-db')
 import os
 
 env = environ.Env(
@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     "commands",
     'django_celery_results',
+    'djstripe',
+    'stripeIntegration'
 ]
 
 MIDDLEWARE = [
@@ -163,16 +165,29 @@ DATABASES = {
 }
 
 DATABASE_ROUTERS = ['videogenerator.routers.MongoDBRouter']
+# CELERY_RESULT_BACKEND = f'db+postgresql+psycopg2://{env("AWS_RDS_USER")}:{env("AWS_RDS_KEY")}@{env("AWS_RDS_HOST")}:5432/{env("AWS_RDS_DB")}'
 CELERY_BROKER_URL = 'pyamqp://guest:guest@localhost//'
 CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'#'django-cache'
+CELERY_RESULT_EXTENDED = True
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+CACHES={
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cachedb'
+    }
+}
 
-
+STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY")
+# STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY")
+STRIPE_LIVE_MODE = False
+DJSTRIPE_WEBHOOK_SECRET = "whsec_xxx"  # We don't use this, but it must be set
+DJSTRIPE_FOREIGN_KEY_TO_FIELD="id"
 # # Celery Configuration
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL
 # # CELERY_RESULT_BACKEND = 'django-db'

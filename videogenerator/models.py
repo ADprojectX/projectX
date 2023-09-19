@@ -10,7 +10,7 @@ User = get_user_model()
 class Request(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    topic = models.CharField(max_length=200)
+    topic = models.CharField(max_length=200, null =True)
     voice = models.CharField(max_length=200, null=True)
     created = models.DateTimeField(auto_now_add=True)
     final_video_asset = models.CharField(max_length=500, null=True)
@@ -153,6 +153,7 @@ class PendingTask(models.Model):
         else:
             # Implement waiting logic or raise an exception to handle the situation when the buffer is full
             raise Exception("Buffer is full. Please wait and retry later.")
+
 
 
 
