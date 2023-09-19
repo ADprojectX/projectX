@@ -10,13 +10,13 @@ share/
 .vscode/settings.json
 projectX.db
 projectX.session.sql
-accounts/migrations/
-accounts/__pycache__/
+# accounts/migrations/
+# accounts/__pycache__/
 captions/
 lib/
 man/
 temp/
 reference/
 firebase-projectx.json
-videogenerator/migrations/
-videogenerator/__pycache__/
+# videogenerator/migrations/
+# videogenerator/__pycache__/
