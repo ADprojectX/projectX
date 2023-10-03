@@ -23,5 +23,5 @@ urlpatterns = [
     path('__debug__/', include(debug_toolbar.urls)),
     path('api/', include('accounts.urls')),
     path('req/', include('videogenerator.urls')),
-    path('pricing/', include('stripeIntegration.urls'))
+    path('payments/', include('stripeIntegration.urls'))
 ]

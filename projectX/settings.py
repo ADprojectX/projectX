@@ -83,6 +83,9 @@ AUTH_USER_MODEL = 'accounts.User'
 # CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+]
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
@@ -93,13 +96,14 @@ CORS_ALLOWED_ORIGINS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        # 'rest_framework.permissions.AllowAny',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
+}
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.IsAuthenticated',
     # ],
-}
 
 # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
@@ -183,10 +187,11 @@ CACHES={
     }
 }
 
-STRIPE_TEST_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY")
-# STRIPE_TEST_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY")
+STRIPE_PUBLIC_KEY = env("STRIPE_TEST_PUBLIC_KEY")
+STRIPE_SECRET_KEY = env("STRIPE_TEST_SECRET_KEY")
 STRIPE_LIVE_MODE = False
-DJSTRIPE_WEBHOOK_SECRET = "whsec_xxx"  # We don't use this, but it must be set
+# STRIPE_ENDPOINT_SECRET="whsec_KCJvaj6gqUZ1uwgp9eTzZWPvHmCwRRmz"
+# STRIPE_WEBHOOK_SECRET = "whsec_74c33570eb2b6fb5aaeb130506a4d4da1855a7d6882fe7bba3b4b640a9f0d3ce"  # We don't use this, but it must be set
 DJSTRIPE_FOREIGN_KEY_TO_FIELD="id"
 # # Celery Configuration
 # CELERY_BROKER_URL = 'redis://localhost:6379/0'  # Replace with your message broker URL

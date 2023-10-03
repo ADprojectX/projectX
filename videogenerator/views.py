@@ -15,36 +15,6 @@ from utility.text_to_audio import get_voice_samples
 
 OBJECT_STORE = os.path.join(os.getcwd(), "OBJECT_STORE")
 
-# class ScriptProcessor(ABC):
-#     @abstractmethod
-#     def process(self, request):
-#         pass
-
-# class DefaultScriptProcessor(ScriptProcessor):
-#     def get_or_create_script(self, req, script_dict):
-#         try:
-#             self.script = Script.objects.get(request=req)
-#             self.script.add_entire_script(script_dict)
-#         except Script.DoesNotExist:
-#             self.script = Script.objects.create(request=req)
-#             self.script.add_entire_script(script_dict)
-#         return self.script
-#     def process(self, request, req_object):
-#         # Replace this with your actual script processing logic
-#         self.script_dict = process_scenes(request)
-#         self.get_or_create_script(req_object, self.script_dict)
-#         return self.script_dict
-
-# class RequestView(APIView):
-#     def post(self, request):
-#         fireid = request.data.get('fireid')
-#         user = User.objects.get(fireid=fireid)
-#         request_object = Request.objects.create(user=user, topic=request.data.get('topic'))
-#         script_processor = DefaultScriptProcessor()
-#         script_dict = script_processor.process(request,request_object)
-#         # script = self.get_or_create_script(req, script_dict)
-#         return Response({'message': 'Request created successfully', 'script': script_dict, 'reqid': request_object.id})
-#         #implement minor change
 @api_view(['POST'])
 def create_request(request):
     fireid = request.data.get('fireid')

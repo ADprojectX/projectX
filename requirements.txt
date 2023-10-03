@@ -72,7 +72,6 @@ proglog==0.1.10
 prometheus-client==0.17.1
 prompt-toolkit==3.0.39
 protobuf==4.24.0
-psycopg2==2.9.7
 psycopg2-binary==2.9.7
 ptyprocess==0.7.0
 pure-eval==0.2.2

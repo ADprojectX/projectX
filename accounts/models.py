@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 import uuid
 from django.db import transaction
+from djstripe.models import Customer, Subscription
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, **extra_fields):
@@ -34,7 +35,9 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(blank=True, null=True, auto_now=True)
-    plan = models.CharField(max_length=200, default='free')
+    customer = models.ForeignKey(Customer, null=True, blank=True, on_delete=models.SET_NULL)
+    subscription = models.ForeignKey(Subscription, null=True, blank=True, on_delete=models.SET_NULL,help_text="The user's Stripe Subscription object, if it exists")
+
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
 

@@ -9,13 +9,14 @@ from rest_framework import status
 from .models import User
 from .serializers import UserSerializer
 from django.db.utils import IntegrityError
+from stripeIntegration.views import CustomerView
 
-@api_view(['POST'])
 def signup_user(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         try:
             user = User.objects.create_user(**serializer.validated_data)
+            CustomerView.create_stripe_customer(user)
             return Response({'id': user.id}, status=status.HTTP_201_CREATED)
         except IntegrityError:
             return Response({'error': 'Email or other unique field already exists'}, status=status.HTTP_400_BAD_REQUEST)
